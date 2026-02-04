@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoEdge AI - Intelligent Crypto Trading</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --accent: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 60px;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 15px; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Hero */
+        .hero {
+            padding: 160px 60px 100px;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .hero-content { flex: 1; }
+        .hero-visual { flex: 1; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 24px;
+        }
+        .badge-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        h1 {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p { font-size: 18px; color: var(--text-secondary); margin-bottom: 36px; max-width: 520px; }
+
+        .hero-buttons { display: flex; gap: 16px; }
+
+        /* Chart mockup */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-pair { font-size: 18px; font-weight: 700; }
+        .chart-price { font-size: 28px; font-weight: 800; color: var(--accent-green); }
+        .chart-change { font-size: 14px; color: var(--accent-green); }
+
+        .chart-svg { width: 100%; height: 200px; }
+
+        .chart-signal {
+            position: absolute;
+            top: 80px;
+            right: 40px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 24px;
+            padding: 40px 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-value { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent); }
+        .stat-value.purple { color: var(--accent-purple); }
+        .stat-label { font-size: 14px; color: var(--text-secondary); }
+
+        /* Features */
+        .features {
+            padding: 80px 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .section-sub {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .feature-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .fi-blue { background: rgba(59, 130, 246, 0.15); }
+        .fi-green { background: rgba(16, 185, 129, 0.15); }
+        .fi-purple { background: rgba(139, 92, 246, 0.15); }
+        .fi-red { background: rgba(239, 68, 68, 0.15); }
+        .fi-yellow { background: rgba(245, 158, 11, 0.15); }
+        .fi-cyan { background: rgba(6, 182, 212, 0.15); }
+
+        .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+        /* How it works */
+        .how-it-works {
+            padding: 80px 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: flex;
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-num {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 auto 20px;
+        }
+
+        .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .step p { font-size: 14px; color: var(--text-secondary); max-width: 260px; margin: 0 auto; }
+
+        .step-arrow {
+            position: absolute;
+            top: 28px;
+            right: -20px;
+            color: var(--text-secondary);
+            font-size: 20px;
+        }
+
+        /* Supported */
+        .supported {
+            padding: 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .exchange-cards {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .exchange-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 40px;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .exchange-card .name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .exchange-card .status { font-size: 13px; color: var(--accent-green); }
+
+        /* CTA */
+        .cta {
+            padding: 80px 60px;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 24px;
+            padding: 60px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-box h2 { font-size: 34px; font-weight: 800; margin-bottom: 16px; }
+        .cta-box p { color: var(--text-secondary); font-size: 17px; margin-bottom: 32px; }
+        .cta-buttons { display: flex; gap: 16px; justify-content: center; }
+
+        /* Footer */
+        footer {
+            padding: 40px 60px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        footer p { color: var(--text-secondary); font-size: 14px; }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
+        .footer-links a:hover { color: var(--text-primary); }
+
+        .disclaimer {
+            text-align: center;
+            padding: 20px 60px 40px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            CryptoEdge <span style="color: var(--accent); font-weight: 400;">AI</span>
+        </div>
+        <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how">How It Works</a>
+            <a href="#exchanges">Exchanges</a>
+            <button class="btn-secondary" style="padding: 8px 20px;">Log In</button>
+            <button class="btn-primary" style="padding: 8px 20px;">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                AI-Powered Trading • Live on Kraken
+            </div>
+            <h1>Trade Smarter with <span>AI-Driven</span> Crypto Signals</h1>
+            <p>Our machine learning models analyze historical BTC & ETH patterns to generate high-confidence trading signals. Connected directly to Kraken via API for automated execution.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">Start Paper Trading →</button>
+                <button class="btn-secondary">View Backtests</button>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-pair">₿ BTC / EUR</div>
+                        <div style="font-size: 13px; color: var(--text-secondary);">1D Timeframe</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="chart-price">€96,842</div>
+                        <div class="chart-change">▲ +3.2% (24h)</div>
+                    </div>
+                </div>
+                <div class="chart-signal">🎯 AI Signal: LONG • 87% confidence</div>
+                <svg class="chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M0,150 Q25,140 50,145 T100,130 T150,135 T200,110 T250,120 T300,90 T350,95 T400,60 T450,55 T500,40" 
+                          fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                    <path d="M0,150 Q25,140 50,145 T100,130 T150,135 T200,110 T250,120 T300,90 T350,95 T400,60 T450,55 T500,40 L500,200 L0,200 Z" 
+                          fill="url(#chartGrad)"/>
+                    <circle cx="400" cy="60" r="5" fill="#10b981" stroke="#0a0e17" stroke-width="2"/>
+                    <circle cx="300" cy="90" r="5" fill="#ef4444" stroke="#0a0e17" stroke-width="2"/>
+                    <text x="405" y="55" fill="#10b981" font-size="10" font-weight="bold">BUY</text>
+                    <text x="280" y="85" fill="#ef4444" font-size="10" font-weight="bold">SELL</text>
+                </svg>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-secondary);">
+                    <span>Jan 5</span><span>Jan 12</span><span>Jan 19</span><span>Jan 26</span><span>Feb 2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value green">+34.7%</div>
+            <div class="stat-label">Backtested Annual Return</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value blue">1-2 Day</div>
+            <div class="stat-label">Trading Window</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value purple">87.3%</div>
+            <div class="stat-label">Signal Accuracy (Backtest)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value green">BTC + ETH</div>
+            <div class="stat-label">Supported Assets</div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features" id="features">
+        <h2 class="section-title">Powered by Intelligence</h2>
+        <p class="section-sub">Advanced ML models trained on years of crypto market data to identify profitable patterns</p>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon fi-blue">🧠</div>
+                <h3>LSTM Neural Networks</h3>
+                <p>Deep learning models that understand temporal patterns in price movements, trained on 5+ years of BTC/ETH data.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-green">📊</div>
+                <h3>Technical Analysis</h3>
+                <p>50+ technical indicators including RSI, MACD, Bollinger Bands, and volume analysis computed automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-purple">🔗</div>
+                <h3>Kraken API Integration</h3>
+                <p>Direct connection to Kraken exchange. Place market/limit orders, manage positions, and track P&L automatically.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-red">🛡️</div>
+                <h3>Risk Management</h3>
+                <p>Built-in stop-losses, position sizing, max drawdown limits, and portfolio heat controls to protect your capital.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-yellow">📈</div>
+                <h3>Long & Short Signals</h3>
+                <p>Profit in both bull and bear markets. AI generates directional signals with confidence scores for each trade.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon fi-cyan">🧪</div>
+                <h3>Paper Trading Mode</h3>
+                <p>Test strategies risk-free with simulated trading. Validate model performance before committing real capital.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="how-it-works" id="how">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-sub">From data to trade in four simple steps</p>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <h3>Ingest Data</h3>
+                <p>Pull historical & live OHLCV data from Kraken for BTC and ETH pairs</p>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <h3>AI Analysis</h3>
+                <p>ML model processes 50+ features and compares to historical patterns</p>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <h3>Generate Signal</h3>
+                <p>Outputs LONG/SHORT/HOLD signal with confidence % and suggested position size</p>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <h3>Execute Trade</h3>
+                <p>Auto-executes on Kraken with stop-loss and take-profit levels preset</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supported Exchanges -->
+    <div class="supported" id="exchanges">
+        <h2 class="section-title">Exchange Integration</h2>
+        <p class="section-sub">Connected to leading exchanges via secure API</p>
+        <div class="exchange-cards">
+            <div class="exchange-card">
+                <div class="name">🐙 Kraken</div>
+                <div class="status">✅ Primary • Live</div>
+            </div>
+            <div class="exchange-card">
+                <div class="name">🟡 Binance</div>
+                <div class="status">🔜 Coming Soon</div>
+            </div>
+            <div class="exchange-card">
+                <div class="name">🟢 Coinbase</div>
+                <div class="status">🔜 Coming Soon</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+        <div class="cta-box">
+            <h2>Ready to Trade with AI?</h2>
+            <p>Start with paper trading to see the AI in action. No real capital required.</p>
+            <div class="cta-buttons">
+                <button class="btn-primary">Start Free Paper Trading →</button>
+                <button class="btn-secondary">Schedule Demo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 CryptoEdge AI. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">API Docs</a>
+            <a href="#">Contact</a>
+        </div>
+    </footer>
+
+    <div class="disclaimer">
+        ⚠️ Trading cryptocurrencies involves significant risk. Past performance and backtested results do not guarantee future returns. 
+        This platform is for informational purposes only and does not constitute financial advice. 
+        Always do your own research and never invest more than you can afford to lose.
+    </div>
+
+</body>
+</html>
