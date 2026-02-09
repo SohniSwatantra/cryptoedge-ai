@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CryptoEdge AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --accent: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Top bar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .topbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        .topbar .logo-icon {
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+        }
+        .topbar-right { display: flex; align-items: center; gap: 20px; }
+        .user-info { font-size: 14px; color: var(--text-secondary); }
+        .user-info strong { color: var(--text-primary); }
+        .btn-sm {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+        .btn-logout:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+        /* Layout */
+        .dashboard { padding: 24px 32px; max-width: 1400px; margin: 0 auto; }
+
+        /* Live ticker strip */
+        .ticker-strip {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+        .ticker-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 24px;
+            min-width: 220px;
+            flex-shrink: 0;
+        }
+        .ticker-pair { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+        .ticker-price { font-size: 24px; font-weight: 800; }
+        .ticker-change { font-size: 13px; margin-top: 2px; }
+        .green { color: var(--accent-green); }
+        .red { color: var(--accent-red); }
+
+        /* Portfolio cards */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .port-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .port-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        .port-value { font-size: 24px; font-weight: 800; }
+
+        /* Sections */
+        .section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section h3 { font-size: 16px; font-weight: 700; }
+
+        /* Signal cards */
+        .signal-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .signal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .signal-pair { font-weight: 700; }
+        .signal-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-long { background: rgba(16,185,129,0.15); color: var(--accent-green); border: 1px solid rgba(16,185,129,0.3); }
+        .badge-short { background: rgba(239,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(239,68,68,0.3); }
+        .badge-hold { background: rgba(148,163,184,0.15); color: var(--text-secondary); border: 1px solid var(--border); }
+        .signal-confidence { font-size: 13px; color: var(--text-secondary); }
+        .signal-indicators { display: flex; gap: 12px; font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+        .signal-indicators span { background: var(--bg-primary); padding: 3px 8px; border-radius: 4px; }
+
+        /* Trade form */
+        .trade-form { display: flex; flex-direction: column; gap: 12px; }
+        .form-row { display: flex; gap: 12px; }
+        .form-row > * { flex: 1; }
+        .trade-form label { font-size: 12px; color: var(--text-secondary); display: block; margin-bottom: 4px; }
+        .trade-form input, .trade-form select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+        }
+        .trade-form input:focus, .trade-form select:focus { border-color: var(--accent); }
+        .btn-trade {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-long { background: var(--accent-green); }
+        .btn-long:hover { background: #059669; }
+        .btn-short { background: var(--accent-red); }
+        .btn-short:hover { background: #dc2626; }
+        .trade-buttons { display: flex; gap: 12px; }
+        .trade-buttons button { flex: 1; }
+
+        /* Positions table */
+        .pos-table { width: 100%; border-collapse: collapse; }
+        .pos-table th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+        }
+        .pos-table td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(30,41,59,0.5);
+        }
+        .btn-close-pos {
+            padding: 4px 12px;
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: var(--accent-red);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .btn-close-pos:hover { background: rgba(239,68,68,0.3); }
+
+        .pnl-positive { color: var(--accent-green); font-weight: 700; }
+        .pnl-negative { color: var(--accent-red); font-weight: 700; }
+        .pnl-cell { white-space: nowrap; }
+        .pos-table tr { cursor: pointer; transition: background 0.15s; }
+        .pos-table thead tr { cursor: default; }
+        .pos-table tbody tr:hover { background: rgba(59,130,246,0.06); }
+
+        /* Position Detail Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 100;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.25s;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px 32px; width: 520px; max-width: 95vw;
+            max-height: 85vh; overflow-y: auto;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { font-size: 18px; }
+        .modal-close {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 22px; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+        }
+        .modal-close:hover { color: var(--text-primary); background: var(--bg-secondary); }
+        .detail-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        }
+        .detail-item { background: var(--bg-secondary); border-radius: 8px; padding: 14px; }
+        .detail-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .detail-value { font-size: 16px; font-weight: 700; }
+        .detail-full { grid-column: 1 / -1; }
+        .detail-divider { grid-column: 1 / -1; height: 1px; background: var(--border); margin: 4px 0; }
+        .pnl-banner {
+            grid-column: 1 / -1; text-align: center; padding: 20px;
+            border-radius: 10px; margin-top: 4px;
+        }
+        .pnl-banner.positive { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+        .pnl-banner.negative { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+        .pnl-banner .pnl-amount { font-size: 28px; font-weight: 800; }
+        .pnl-banner .pnl-percent { font-size: 14px; margin-top: 2px; }
+
+        .empty-state { text-align: center; padding: 32px; color: var(--text-secondary); font-size: 14px; }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 20px;
+            font-size: 14px;
+            z-index: 200;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--accent-green); }
+        .toast.error { border-color: var(--accent-red); }
+
+        /* Full width section */
+        .full-section { margin-bottom: 24px; }
+
+        /* Connection status */
+        .ws-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .ws-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent-red);
+        }
+        .ws-dot.connected { background: var(--accent-green); animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+        @media (max-width: 768px) {
+            .dashboard { padding: 16px; }
+            .topbar { padding: 12px 16px; }
+            .section-grid { grid-template-columns: 1fr; }
+            .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="topbar">
+        <a href="/" class="logo">
+            <div class="logo-icon">&#9889;</div>
+            CryptoEdge <span style="color:var(--accent);font-weight:400;">AI</span>
+        </a>
+        <div class="topbar-right">
+            <div class="ws-status">
+                <div class="ws-dot" id="wsDot"></div>
+                <span id="wsLabel">Disconnected</span>
+            </div>
+            <div class="user-info">Welcome, <strong id="userName">-</strong></div>
+            <button class="btn-sm btn-logout" onclick="logout()">Log Out</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <!-- Live Ticker Strip -->
+        <div class="ticker-strip" id="tickerStrip">
+            <div class="ticker-item">
+                <div class="ticker-pair">&#8383; BTC / EUR</div>
+                <div class="ticker-price" id="btcPrice">Loading...</div>
+                <div class="ticker-change" id="btcChange">-</div>
+            </div>
+            <div class="ticker-item">
+                <div class="ticker-pair">&#926; ETH / EUR</div>
+                <div class="ticker-price" id="ethPrice">Loading...</div>
+                <div class="ticker-change" id="ethChange">-</div>
+            </div>
+        </div>
+
+        <!-- Portfolio Summary -->
+        <div class="portfolio-grid" id="portfolioGrid">
+            <div class="port-card">
+                <div class="port-label">Cash Balance</div>
+                <div class="port-value" id="cashBalance">-</div>
+            </div>
+            <div class="port-card">
+                <div class="port-label">Invested</div>
+                <div class="port-value" id="investedAmount">-</div>
+            </div>
+            <div class="port-card">
+                <div class="port-label">Total Value</div>
+                <div class="port-value" id="totalValue">-</div>
+            </div>
+            <div class="port-card">
+                <div class="port-label">Realized P&L</div>
+                <div class="port-value" id="totalPnl">-</div>
+            </div>
+            <div class="port-card">
+                <div class="port-label">Unrealized P&L</div>
+                <div class="port-value" id="unrealizedPnl">-</div>
+            </div>
+            <div class="port-card">
+                <div class="port-label">Win Rate</div>
+                <div class="port-value" id="winRate">-</div>
+            </div>
+            <div class="port-card">
+                <div class="port-label">Total Trades</div>
+                <div class="port-value" id="totalTrades">-</div>
+            </div>
+        </div>
+
+        <!-- Signals + Quick Trade -->
+        <div class="section-grid">
+            <!-- AI Signals -->
+            <div class="section">
+                <div class="section-header">
+                    <h3>AI Signals (Live)</h3>
+                    <span style="font-size:12px;color:var(--text-secondary);" id="signalTime">-</span>
+                </div>
+                <div id="signalsList">
+                    <div class="empty-state">Waiting for signals...</div>
+                </div>
+            </div>
+
+            <!-- Quick Trade -->
+            <div class="section">
+                <h3 style="margin-bottom:16px;">Quick Trade (Paper)</h3>
+                <div class="trade-form" id="tradeForm">
+                    <div class="form-row">
+                        <div>
+                            <label>Pair</label>
+                            <select id="tradePair">
+                                <option value="BTC/EUR">BTC/EUR</option>
+                                <option value="ETH/EUR">ETH/EUR</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Quantity</label>
+                            <input type="number" id="tradeQty" step="0.001" min="0.001" placeholder="0.01" value="0.01">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Stop Loss (optional)</label>
+                            <input type="number" id="tradeSL" step="0.01" placeholder="Auto">
+                        </div>
+                        <div>
+                            <label>Take Profit (optional)</label>
+                            <input type="number" id="tradeTP" step="0.01" placeholder="Auto">
+                        </div>
+                    </div>
+                    <div class="trade-buttons">
+                        <button class="btn-trade btn-long" onclick="placeTrade('long')">&#9650; Long</button>
+                        <button class="btn-trade btn-short" onclick="placeTrade('short')">&#9660; Short</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Open Positions -->
+        <div class="section full-section">
+            <div class="section-header">
+                <h3>Open Positions</h3>
+                <span style="font-size:13px;color:var(--text-secondary);" id="posCount">0 open</span>
+            </div>
+            <div id="positionsContainer">
+                <div class="empty-state">No open positions. Place a trade to get started.</div>
+            </div>
+        </div>
+
+        <!-- Trade History -->
+        <div class="section full-section">
+            <div class="section-header">
+                <h3>Trade History</h3>
+            </div>
+            <div id="historyContainer">
+                <div class="empty-state">No closed trades yet.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Position Detail Modal -->
+    <div class="modal-overlay" id="posDetailModal" onclick="if(event.target===this)closeDetailModal()">
+        <div class="modal-content" id="posDetailContent"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    const API = '';
+    let token = localStorage.getItem('cryptoedge_token');
+    let ws = null;
+    let latestTickers = {};
+    let openPositions = [];
+    let closedTrades = [];
+
+    // Auth check
+    if (!token) { window.location.href = '/'; }
+
+    function headers() { return { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }; }
+
+    function logout() {
+        localStorage.removeItem('cryptoedge_token');
+        localStorage.removeItem('cryptoedge_user');
+        window.location.href = '/';
+    }
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + type + ' show';
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function fmt(num, decimals = 2) {
+        return '\u20AC' + parseFloat(num).toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    }
+
+    function calcUnrealizedPnl(position, currentPrice) {
+        if (!currentPrice) return null;
+        if (position.direction === 'long') {
+            return (currentPrice - position.entry_price) * position.quantity;
+        } else {
+            return (position.entry_price - currentPrice) * position.quantity;
+        }
+    }
+
+    function calcPnlPercent(position, pnl) {
+        const invested = position.entry_price * position.quantity;
+        return invested > 0 ? (pnl / invested) * 100 : 0;
+    }
+
+    function getCurrentPriceForPair(pair) {
+        return latestTickers[pair]?.price || null;
+    }
+
+    function formatDuration(start, end) {
+        const ms = new Date(end) - new Date(start);
+        const mins = Math.floor(ms / 60000);
+        if (mins < 60) return mins + 'm';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + 'h ' + (mins % 60) + 'm';
+        const days = Math.floor(hrs / 24);
+        return days + 'd ' + (hrs % 24) + 'h';
+    }
+
+    function updateUnrealizedPnlCard() {
+        const el = document.getElementById('unrealizedPnl');
+        if (openPositions.length === 0) {
+            el.textContent = fmt(0);
+            el.className = 'port-value';
+            return;
+        }
+        let totalUnrealized = 0;
+        let hasPrices = false;
+        for (const p of openPositions) {
+            const price = getCurrentPriceForPair(p.pair);
+            if (price) {
+                hasPrices = true;
+                totalUnrealized += calcUnrealizedPnl(p, price);
+            }
+        }
+        if (!hasPrices) { el.textContent = '-'; return; }
+        el.textContent = (totalUnrealized >= 0 ? '+' : '') + fmt(totalUnrealized);
+        el.className = 'port-value ' + (totalUnrealized >= 0 ? 'green' : 'red');
+    }
+
+    // Load user info
+    async function loadUser() {
+        try {
+            const res = await fetch(API + '/api/auth/me', { headers: headers() });
+            if (!res.ok) { logout(); return; }
+            const data = await res.json();
+            document.getElementById('userName').textContent = data.user.name;
+        } catch { logout(); }
+    }
+
+    // Load portfolio
+    async function loadPortfolio() {
+        try {
+            const res = await fetch(API + '/api/portfolio/summary', { headers: headers() });
+            const data = await res.json();
+            const s = data.summary;
+            document.getElementById('cashBalance').textContent = fmt(s.cash_balance);
+            document.getElementById('investedAmount').textContent = fmt(s.invested);
+            document.getElementById('totalValue').textContent = fmt(s.total_value);
+            const pnlEl = document.getElementById('totalPnl');
+            pnlEl.textContent = (s.total_pnl >= 0 ? '+' : '') + fmt(s.total_pnl);
+            pnlEl.className = 'port-value ' + (s.total_pnl >= 0 ? 'green' : 'red');
+            document.getElementById('winRate').textContent = s.win_rate + '%';
+            document.getElementById('totalTrades').textContent = s.total_trades;
+        } catch (err) { console.error('Portfolio error:', err); }
+    }
+
+    // Load positions
+    async function loadPositions() {
+        try {
+            const res = await fetch(API + '/api/trade/positions', { headers: headers() });
+            const data = await res.json();
+            openPositions = data.positions;
+            renderPositions();
+        } catch (err) { console.error('Positions error:', err); }
+    }
+
+    function renderPositions() {
+        const c = document.getElementById('positionsContainer');
+        document.getElementById('posCount').textContent = openPositions.length + ' open';
+        if (openPositions.length === 0) {
+            c.innerHTML = '<div class="empty-state">No open positions. Place a trade to get started.</div>';
+            updateUnrealizedPnlCard();
+            return;
+        }
+        c.innerHTML = '<table class="pos-table"><thead><tr><th>Pair</th><th>Direction</th><th>Entry Price</th><th>Current Price</th><th>Qty</th><th>Unrealized P&L</th><th>Return %</th><th>Opened</th><th></th></tr></thead><tbody>' +
+            openPositions.map(p => {
+                const curPrice = getCurrentPriceForPair(p.pair);
+                const pnl = curPrice ? calcUnrealizedPnl(p, curPrice) : null;
+                const pnlPct = pnl !== null ? calcPnlPercent(p, pnl) : null;
+                const pnlClass = pnl !== null ? (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') : '';
+                return `<tr onclick="showPositionDetail(${p.id})" title="Click for details">
+                    <td><strong>${p.pair}</strong></td>
+                    <td><span class="signal-badge badge-${p.direction}">${p.direction}</span></td>
+                    <td>${fmt(p.entry_price)}</td>
+                    <td>${curPrice ? fmt(curPrice) : '<span style="color:var(--text-secondary)">--</span>'}</td>
+                    <td>${p.quantity}</td>
+                    <td class="pnl-cell ${pnlClass}">${pnl !== null ? (pnl >= 0 ? '+' : '') + fmt(pnl) : '--'}</td>
+                    <td class="pnl-cell ${pnlClass}">${pnlPct !== null ? (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%' : '--'}</td>
+                    <td>${new Date(p.created_at).toLocaleString()}</td>
+                    <td><button class="btn-close-pos" onclick="event.stopPropagation();closeTrade(${p.id})">Close</button></td>
+                </tr>`;
+            }).join('') + '</tbody></table>';
+        updateUnrealizedPnlCard();
+    }
+
+    // Load trade history
+    async function loadHistory() {
+        try {
+            const res = await fetch(API + '/api/trade/history', { headers: headers() });
+            const data = await res.json();
+            closedTrades = data.trades;
+            const c = document.getElementById('historyContainer');
+            if (closedTrades.length === 0) {
+                c.innerHTML = '<div class="empty-state">No closed trades yet.</div>';
+                return;
+            }
+            c.innerHTML = '<table class="pos-table"><thead><tr><th>Pair</th><th>Dir</th><th>Entry</th><th>Exit</th><th>Qty</th><th>P&L</th><th>Return %</th><th>Duration</th><th>Closed</th></tr></thead><tbody>' +
+                closedTrades.map((t, idx) => {
+                    const invested = t.entry_price * t.quantity;
+                    const pctReturn = invested > 0 ? (t.pnl / invested) * 100 : 0;
+                    const duration = t.created_at && t.closed_at ? formatDuration(t.created_at, t.closed_at) : '-';
+                    return `<tr onclick="showHistoryDetail(closedTrades[${idx}])" title="Click for details" style="cursor:pointer">
+                    <td><strong>${t.pair}</strong></td>
+                    <td><span class="signal-badge badge-${t.direction}">${t.direction}</span></td>
+                    <td>${fmt(t.entry_price)}</td>
+                    <td>${fmt(t.exit_price)}</td>
+                    <td>${t.quantity}</td>
+                    <td class="${t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${t.pnl >= 0 ? '+' : ''}${fmt(t.pnl)}</td>
+                    <td class="${pctReturn >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pctReturn >= 0 ? '+' : ''}${pctReturn.toFixed(2)}%</td>
+                    <td>${duration}</td>
+                    <td>${new Date(t.closed_at).toLocaleString()}</td>
+                </tr>`;
+                }).join('') + '</tbody></table>';
+        } catch (err) { console.error('History error:', err); }
+    }
+
+    // Place trade
+    async function placeTrade(direction) {
+        const pair = document.getElementById('tradePair').value;
+        const quantity = parseFloat(document.getElementById('tradeQty').value);
+        const stop_loss = parseFloat(document.getElementById('tradeSL').value) || undefined;
+        const take_profit = parseFloat(document.getElementById('tradeTP').value) || undefined;
+
+        if (!quantity || quantity <= 0) { showToast('Enter a valid quantity', 'error'); return; }
+
+        try {
+            const res = await fetch(API + '/api/trade/open', {
+                method: 'POST',
+                headers: headers(),
+                body: JSON.stringify({ pair, direction, quantity, stop_loss, take_profit })
+            });
+            const data = await res.json();
+            if (!res.ok) { showToast(data.error, 'error'); return; }
+            showToast(`${direction.toUpperCase()} position opened: ${pair} x${quantity}`);
+            loadPositions();
+            loadPortfolio();
+        } catch (err) { showToast('Trade failed: ' + err.message, 'error'); }
+    }
+
+    // Close trade
+    async function closeTrade(id) {
+        try {
+            const res = await fetch(API + '/api/trade/close/' + id, {
+                method: 'POST',
+                headers: headers()
+            });
+            const data = await res.json();
+            if (!res.ok) { showToast(data.error, 'error'); return; }
+            const pnl = data.trade.pnl >= 0 ? '+' + fmt(data.trade.pnl) : fmt(data.trade.pnl);
+            showToast(`Position closed. P&L: ${pnl}`, data.trade.pnl >= 0 ? 'success' : 'error');
+            loadPositions();
+            loadHistory();
+            loadPortfolio();
+        } catch (err) { showToast('Close failed: ' + err.message, 'error'); }
+    }
+
+    // Update ticker display
+    function updateTickers(tickers) {
+        Object.assign(latestTickers, tickers);
+        for (const [pair, data] of Object.entries(tickers)) {
+            if (pair === 'BTC/EUR') {
+                document.getElementById('btcPrice').textContent = fmt(data.price);
+                const el = document.getElementById('btcChange');
+                el.textContent = (data.change_24h >= 0 ? '\u25B2 +' : '\u25BC ') + data.change_24h.toFixed(2) + '% (24h)';
+                el.className = 'ticker-change ' + (data.change_24h >= 0 ? 'green' : 'red');
+            }
+            if (pair === 'ETH/EUR') {
+                document.getElementById('ethPrice').textContent = fmt(data.price);
+                const el = document.getElementById('ethChange');
+                el.textContent = (data.change_24h >= 0 ? '\u25B2 +' : '\u25BC ') + data.change_24h.toFixed(2) + '% (24h)';
+                el.className = 'ticker-change ' + (data.change_24h >= 0 ? 'green' : 'red');
+            }
+        }
+        // Re-render positions with updated prices
+        if (openPositions.length > 0) renderPositions();
+    }
+
+    // Update signals display
+    function updateSignals(signals) {
+        const container = document.getElementById('signalsList');
+        const html = Object.entries(signals).map(([pair, s]) => {
+            if (!s) return '';
+            const badgeClass = s.direction === 'long' ? 'badge-long' : s.direction === 'short' ? 'badge-short' : 'badge-hold';
+            return `<div class="signal-card">
+                <div class="signal-top">
+                    <span class="signal-pair">${s.pair}</span>
+                    <span class="signal-badge ${badgeClass}">${s.direction} ${s.confidence}%</span>
+                </div>
+                <div class="signal-confidence">Price at signal: ${fmt(s.price_at_signal || s.price)}</div>
+                ${s.indicators || s.rsi ? `<div class="signal-indicators">
+                    ${s.rsi ? `<span>RSI: ${parseFloat(s.rsi).toFixed(1)}</span>` : ''}
+                    ${s.macd ? `<span>MACD: ${parseFloat(s.macd).toFixed(4)}</span>` : ''}
+                </div>` : ''}
+            </div>`;
+        }).join('');
+        container.innerHTML = html || '<div class="empty-state">Waiting for signals...</div>';
+        document.getElementById('signalTime').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    }
+
+    // Position detail modal
+    function showPositionDetail(posId) {
+        const p = openPositions.find(pos => pos.id === posId);
+        if (!p) return;
+        const curPrice = getCurrentPriceForPair(p.pair);
+        const pnl = curPrice ? calcUnrealizedPnl(p, curPrice) : null;
+        const pnlPct = pnl !== null ? calcPnlPercent(p, pnl) : null;
+        const invested = p.entry_price * p.quantity;
+        const holdTime = formatDuration(p.created_at, new Date().toISOString());
+
+        const modal = document.getElementById('posDetailModal');
+        document.getElementById('posDetailContent').innerHTML = `
+            <div class="modal-header">
+                <h3>${p.pair} <span class="signal-badge badge-${p.direction}" style="margin-left:8px;">${p.direction}</span></h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="detail-grid">
+                ${pnl !== null ? `<div class="pnl-banner ${pnl >= 0 ? 'positive' : 'negative'}">
+                    <div class="pnl-amount ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pnl >= 0 ? '+' : ''}${fmt(pnl)}</div>
+                    <div class="pnl-percent ${pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% return</div>
+                </div>` : ''}
+                <div class="detail-item">
+                    <div class="detail-label">Entry Price</div>
+                    <div class="detail-value">${fmt(p.entry_price)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Current Price</div>
+                    <div class="detail-value">${curPrice ? fmt(curPrice) : '--'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Quantity</div>
+                    <div class="detail-value">${p.quantity}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Invested</div>
+                    <div class="detail-value">${fmt(invested)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Current Value</div>
+                    <div class="detail-value">${curPrice ? fmt(curPrice * p.quantity) : '--'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Hold Duration</div>
+                    <div class="detail-value">${holdTime}</div>
+                </div>
+                <div class="detail-divider"></div>
+                <div class="detail-item">
+                    <div class="detail-label">Stop Loss</div>
+                    <div class="detail-value">${p.stop_loss ? fmt(p.stop_loss) : 'Not set'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Take Profit</div>
+                    <div class="detail-value">${p.take_profit ? fmt(p.take_profit) : 'Not set'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Opened</div>
+                    <div class="detail-value" style="font-size:13px;">${new Date(p.created_at).toLocaleString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Trade ID</div>
+                    <div class="detail-value">#${p.id}</div>
+                </div>
+            </div>
+            <div style="margin-top:20px;text-align:center;">
+                <button class="btn-close-pos" style="padding:10px 32px;font-size:14px;" onclick="closeDetailModal();closeTrade(${p.id})">Close Position</button>
+            </div>
+        `;
+        modal.classList.add('active');
+    }
+
+    function showHistoryDetail(tradeStr) {
+        const t = typeof tradeStr === 'string' ? JSON.parse(tradeStr) : tradeStr;
+        const invested = t.entry_price * t.quantity;
+        const pctReturn = invested > 0 ? (t.pnl / invested) * 100 : 0;
+        const duration = t.created_at && t.closed_at ? formatDuration(t.created_at, t.closed_at) : '-';
+
+        const modal = document.getElementById('posDetailModal');
+        document.getElementById('posDetailContent').innerHTML = `
+            <div class="modal-header">
+                <h3>${t.pair} <span class="signal-badge badge-${t.direction}" style="margin-left:8px;">${t.direction}</span> <span style="font-size:12px;color:var(--text-secondary);font-weight:400;margin-left:8px;">CLOSED</span></h3>
+                <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+            </div>
+            <div class="detail-grid">
+                <div class="pnl-banner ${t.pnl >= 0 ? 'positive' : 'negative'}">
+                    <div class="pnl-amount ${t.pnl >= 0 ? 'pnl-positive' : 'pnl-negative'}">${t.pnl >= 0 ? '+' : ''}${fmt(t.pnl)}</div>
+                    <div class="pnl-percent ${pctReturn >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pctReturn >= 0 ? '+' : ''}${pctReturn.toFixed(2)}% return</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Entry Price</div>
+                    <div class="detail-value">${fmt(t.entry_price)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Exit Price</div>
+                    <div class="detail-value">${fmt(t.exit_price)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Quantity</div>
+                    <div class="detail-value">${t.quantity}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Invested</div>
+                    <div class="detail-value">${fmt(invested)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Returned</div>
+                    <div class="detail-value">${fmt(invested + t.pnl)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Hold Duration</div>
+                    <div class="detail-value">${duration}</div>
+                </div>
+                <div class="detail-divider"></div>
+                <div class="detail-item">
+                    <div class="detail-label">Opened</div>
+                    <div class="detail-value" style="font-size:13px;">${new Date(t.created_at).toLocaleString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Closed</div>
+                    <div class="detail-value" style="font-size:13px;">${new Date(t.closed_at).toLocaleString()}</div>
+                </div>
+            </div>
+        `;
+        modal.classList.add('active');
+    }
+
+    function closeDetailModal() {
+        document.getElementById('posDetailModal').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDetailModal(); });
+
+    // WebSocket connection
+    function connectWS() {
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(protocol + '//' + location.host + '/ws');
+
+        ws.onopen = () => {
+            document.getElementById('wsDot').classList.add('connected');
+            document.getElementById('wsLabel').textContent = 'Live';
+        };
+
+        ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === 'ticker') updateTickers(msg.data);
+            if (msg.type === 'signals') updateSignals(msg.data);
+        };
+
+        ws.onclose = () => {
+            document.getElementById('wsDot').classList.remove('connected');
+            document.getElementById('wsLabel').textContent = 'Reconnecting...';
+            setTimeout(connectWS, 3000);
+        };
+
+        ws.onerror = () => ws.close();
+    }
+
+    // Load initial signals from REST API
+    async function loadSignals() {
+        try {
+            const res = await fetch(API + '/api/signals/latest');
+            const data = await res.json();
+            updateSignals(data.signals);
+        } catch (err) { console.error('Signals error:', err); }
+    }
+
+    // Initial ticker load from REST
+    async function loadTickers() {
+        try {
+            const res = await fetch(API + '/api/market/ticker');
+            const data = await res.json();
+            Object.assign(latestTickers, data.tickers);
+            updateTickers(data.tickers);
+        } catch (err) { console.error('Ticker error:', err); }
+    }
+
+    // Init
+    loadUser();
+    loadPortfolio();
+    loadPositions();
+    loadHistory();
+    loadTickers();
+    loadSignals();
+    connectWS();
+
+    // Refresh portfolio every 30s
+    setInterval(() => { loadPortfolio(); loadPositions(); }, 30000);
+    </script>
+</body>
+</html>

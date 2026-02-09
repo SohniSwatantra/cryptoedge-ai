@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoEdge AI - Intelligent Crypto Trading</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+        .sr-only {
+            position: absolute; width: 1px; height: 1px;
+            padding: 0; margin: -1px; overflow: hidden;
+            clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        }
+        a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+        
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2235;
+            --accent: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #1e293b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 60px;
+            background: rgba(10, 14, 23, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-links a { color: var(--text-secondary); text-decoration: none; font-size: 15px; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--text-primary); }
+        .nav-links a.active { color: var(--accent); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Hero */
+        .hero {
+            padding: 160px 60px 100px;
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .hero-content { flex: 1; }
+        .hero-visual { flex: 1; }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 24px;
+        }
+        .badge-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; animation: pulse 2s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        h1 {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p { font-size: 18px; color: var(--text-secondary); margin-bottom: 36px; max-width: 520px; }
+
+        .hero-buttons { display: flex; gap: 16px; }
+
+        /* Chart mockup */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            position: relative;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-pair { font-size: 18px; font-weight: 700; }
+        .chart-price { font-size: 28px; font-weight: 800; color: var(--accent-green); }
+        .chart-change { font-size: 14px; color: var(--accent-green); }
+
+        .chart-svg { width: 100%; height: 200px; }
+        .chart-svg path.animated-line {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawLine 2s ease forwards;
+        }
+        .chart-svg path.animated-fill {
+            opacity: 0;
+            animation: fadeInFill 1s ease 1.5s forwards;
+        }
+        @keyframes drawLine {
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes fadeInFill {
+            to { opacity: 1; }
+        }
+        .price-tick { transition: all 0.4s ease; }
+
+        .chart-signal {
+            position: absolute;
+            top: 80px;
+            right: 40px;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 24px;
+            padding: 40px 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-value { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.blue { color: var(--accent); }
+        .stat-value.purple { color: var(--accent-purple); }
+        .stat-label { font-size: 14px; color: var(--text-secondary); }
+
+        /* Features */
+        .features {
+            padding: 80px 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .section-sub {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 17px;
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .feature-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+        .fi-blue { background: rgba(59, 130, 246, 0.15); }
+        .fi-green { background: rgba(16, 185, 129, 0.15); }
+        .fi-purple { background: rgba(139, 92, 246, 0.15); }
+        .fi-red { background: rgba(239, 68, 68, 0.15); }
+        .fi-yellow { background: rgba(245, 158, 11, 0.15); }
+        .fi-cyan { background: rgba(6, 182, 212, 0.15); }
+
+        .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+
+        /* How it works */
+        .how-it-works {
+            padding: 80px 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: flex;
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-num {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 auto 20px;
+        }
+
+        .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .step p { font-size: 14px; color: var(--text-secondary); max-width: 260px; margin: 0 auto; }
+
+        .step-arrow {
+            position: absolute;
+            top: 28px;
+            right: -20px;
+            color: var(--text-secondary);
+            font-size: 20px;
+        }
+
+        /* Supported */
+        .supported {
+            padding: 60px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        .exchange-cards {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .exchange-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 40px;
+            text-align: center;
+            min-width: 180px;
+        }
+
+        .exchange-card .name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+        .exchange-card .status { font-size: 13px; color: var(--accent-green); }
+
+        /* CTA */
+        .cta {
+            padding: 80px 60px;
+            text-align: center;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 24px;
+            padding: 60px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-box h2 { font-size: 34px; font-weight: 800; margin-bottom: 16px; }
+        .cta-box p { color: var(--text-secondary); font-size: 17px; margin-bottom: 32px; }
+        .cta-buttons { display: flex; gap: 16px; justify-content: center; }
+
+        /* Footer */
+        footer {
+            padding: 40px 60px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        footer p { color: var(--text-secondary); font-size: 14px; }
+        .footer-links { display: flex; gap: 24px; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 14px; }
+        .footer-links a:hover { color: var(--text-primary); }
+
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 101;
+            background: none;
+            border: none;
+            padding: 4px;
+        }
+        .hamburger span {
+            width: 28px;
+            height: 3px;
+            background: var(--text-primary);
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(6px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
+
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 280px;
+                height: 100vh;
+                background: var(--bg-secondary);
+                flex-direction: column;
+                padding: 80px 30px 30px;
+                gap: 20px;
+                transition: right 0.3s ease;
+                border-left: 1px solid var(--border);
+                z-index: 100;
+            }
+            .nav-links.open { right: 0; }
+            .nav-links a { font-size: 18px; }
+            nav { padding: 16px 24px; }
+
+            /* Hero responsive */
+            .hero {
+                flex-direction: column;
+                padding: 120px 24px 60px;
+                gap: 40px;
+                text-align: center;
+            }
+            .hero p { margin-left: auto; margin-right: auto; }
+            .hero-buttons { justify-content: center; flex-wrap: wrap; }
+            h1 { font-size: 34px; }
+            .hero p { font-size: 16px; }
+
+            /* Stats responsive */
+            .stats {
+                flex-wrap: wrap;
+                padding: 24px;
+                gap: 16px;
+            }
+            .stat-card { flex: 1 1 calc(50% - 16px); min-width: 140px; }
+            .stat-value { font-size: 28px; }
+
+            /* Features responsive */
+            .features { padding: 60px 24px; }
+            .features-grid { grid-template-columns: 1fr; gap: 16px; }
+            .section-title { font-size: 28px; }
+            .section-sub { font-size: 15px; }
+
+            /* Steps responsive */
+            .how-it-works { padding: 60px 24px; }
+            .steps { flex-direction: column; gap: 24px; }
+            .step-arrow { display: none; }
+
+            /* Exchanges responsive */
+            .supported { padding: 40px 24px; }
+            .exchange-cards { flex-direction: column; align-items: center; }
+            .exchange-card { width: 100%; max-width: 300px; }
+
+            /* CTA responsive */
+            .cta { padding: 40px 24px; }
+            .cta-box { padding: 36px 24px; }
+            .cta-box h2 { font-size: 24px; }
+            .cta-buttons { flex-direction: column; align-items: center; }
+
+            /* Footer responsive */
+            footer { flex-direction: column; gap: 16px; text-align: center; padding: 30px 24px; }
+            .disclaimer { padding: 20px 24px; }
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%;
+            max-width: 440px;
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-close {
+            position: absolute;
+            top: 16px; right: 16px;
+            background: none; border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close:hover { color: var(--text-primary); }
+        .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+        .modal .modal-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+        .form-group input.error { border-color: var(--accent-red); }
+        .form-error {
+            color: var(--accent-red);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        .form-error.show { display: block; }
+        .form-group input.error + .form-error { display: block; }
+        .modal .btn-primary { width: 100%; padding: 14px; font-size: 16px; }
+        .modal-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .modal-footer a {
+            color: var(--accent);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-footer a:hover { text-decoration: underline; }
+
+        /* Backtest Table */
+        .backtests { padding: 80px 60px; max-width: 1300px; margin: 0 auto; }
+        .backtest-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 40px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .backtest-table th {
+            background: var(--bg-secondary);
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .backtest-table td {
+            padding: 14px 20px;
+            font-size: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .backtest-table tr:hover td { background: rgba(59, 130, 246, 0.04); }
+        .positive { color: var(--accent-green); font-weight: 600; }
+        .negative { color: var(--accent-red); font-weight: 600; }
+        .backtest-summary {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .bt-summary-card {
+            flex: 1;
+            min-width: 160px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .bt-summary-card .val { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+        .bt-summary-card .lbl { font-size: 13px; color: var(--text-secondary); }
+
+        @media (max-width: 768px) {
+            .backtests { padding: 60px 24px; }
+            .backtest-table { font-size: 12px; }
+            .backtest-table th, .backtest-table td { padding: 10px 12px; }
+        }
+
+        /* Multi-Step Form */
+        .step-indicators {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+        .step-indicator {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .step-indicator.active { background: var(--accent); }
+        .step-indicator.done { background: var(--accent-green); }
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+        .success-state {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .success-state .check {
+            width: 64px; height: 64px;
+            background: rgba(16, 185, 129, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 16px;
+        }
+        .success-state h3 { font-size: 20px; margin-bottom: 8px; }
+        .success-state p { color: var(--text-secondary); font-size: 14px; }
+
+        /* Scroll Animations */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .fade-in-up:nth-child(2) { transition-delay: 0.1s; }
+        .fade-in-up:nth-child(3) { transition-delay: 0.2s; }
+        .fade-in-up:nth-child(4) { transition-delay: 0.3s; }
+        .fade-in-up:nth-child(5) { transition-delay: 0.4s; }
+        .fade-in-up:nth-child(6) { transition-delay: 0.5s; }
+
+        .disclaimer {
+            text-align: center;
+            padding: 20px 60px 40px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav role="navigation" aria-label="Main navigation">
+        <div class="logo">
+            <div class="logo-icon">⚡</div>
+            CryptoEdge <span style="color: var(--accent); font-weight: 400;">AI</span>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="nav-links" id="navLinks">
+            <a href="#features">Features</a>
+            <a href="#how">How It Works</a>
+            <a href="#exchanges">Exchanges</a>
+            <a href="#backtests">Backtests</a>
+            <button class="btn-secondary" style="padding: 8px 20px;" id="loginBtn">Log In</button>
+            <button class="btn-primary" style="padding: 8px 20px;" id="getStartedBtn">Get Started</button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                AI-Powered Trading • Live on Kraken
+            </div>
+            <h1>Trade Smarter with <span>AI-Driven</span> Crypto Signals</h1>
+            <p>Our machine learning models analyze historical BTC & ETH patterns to generate high-confidence trading signals. Connected directly to Kraken via API for automated execution.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">Start Paper Trading →</button>
+                <a href="#backtests" class="btn-secondary" style="text-decoration:none;display:inline-block;">View Backtests</a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-pair">₿ BTC / EUR</div>
+                        <div style="font-size: 13px; color: var(--text-secondary);">1D Timeframe</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="chart-price price-tick" id="livePrice">€96,842</div>
+                        <div class="chart-change price-tick" id="liveChange">▲ +3.2% (24h)</div>
+                    </div>
+                </div>
+                <div class="chart-signal">🎯 AI Signal: LONG • 87% confidence</div>
+                <svg class="chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    <path class="animated-line" d="M0,150 Q25,140 50,145 T100,130 T150,135 T200,110 T250,120 T300,90 T350,95 T400,60 T450,55 T500,40"
+                          fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                    <path class="animated-fill" d="M0,150 Q25,140 50,145 T100,130 T150,135 T200,110 T250,120 T300,90 T350,95 T400,60 T450,55 T500,40 L500,200 L0,200 Z"
+                          fill="url(#chartGrad)"/>
+                    <circle cx="400" cy="60" r="5" fill="#10b981" stroke="#0a0e17" stroke-width="2"/>
+                    <circle cx="300" cy="90" r="5" fill="#ef4444" stroke="#0a0e17" stroke-width="2"/>
+                    <text x="405" y="55" fill="#10b981" font-size="10" font-weight="bold">BUY</text>
+                    <text x="280" y="85" fill="#ef4444" font-size="10" font-weight="bold">SELL</text>
+                </svg>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-secondary);">
+                    <span>Jan 5</span><span>Jan 12</span><span>Jan 19</span><span>Jan 26</span><span>Feb 2</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+        <div class="stat-card fade-in-up">
+            <div class="stat-value green">+34.7%</div>
+            <div class="stat-label">Backtested Annual Return</div>
+        </div>
+        <div class="stat-card fade-in-up">
+            <div class="stat-value blue">1-2 Day</div>
+            <div class="stat-label">Trading Window</div>
+        </div>
+        <div class="stat-card fade-in-up">
+            <div class="stat-value purple">87.3%</div>
+            <div class="stat-label">Signal Accuracy (Backtest)</div>
+        </div>
+        <div class="stat-card fade-in-up">
+            <div class="stat-value green">BTC + ETH</div>
+            <div class="stat-label">Supported Assets</div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="features" id="features">
+        <h2 class="section-title">Powered by Intelligence</h2>
+        <p class="section-sub">Advanced ML models trained on years of crypto market data to identify profitable patterns</p>
+        <div class="features-grid">
+            <div class="feature-card fade-in-up">
+                <div class="feature-icon fi-blue">🧠</div>
+                <h3>LSTM Neural Networks</h3>
+                <p>Deep learning models that understand temporal patterns in price movements, trained on 5+ years of BTC/ETH data.</p>
+            </div>
+            <div class="feature-card fade-in-up">
+                <div class="feature-icon fi-green">📊</div>
+                <h3>Technical Analysis</h3>
+                <p>50+ technical indicators including RSI, MACD, Bollinger Bands, and volume analysis computed automatically.</p>
+            </div>
+            <div class="feature-card fade-in-up">
+                <div class="feature-icon fi-purple">🔗</div>
+                <h3>Kraken API Integration</h3>
+                <p>Direct connection to Kraken exchange. Place market/limit orders, manage positions, and track P&L automatically.</p>
+            </div>
+            <div class="feature-card fade-in-up">
+                <div class="feature-icon fi-red">🛡️</div>
+                <h3>Risk Management</h3>
+                <p>Built-in stop-losses, position sizing, max drawdown limits, and portfolio heat controls to protect your capital.</p>
+            </div>
+            <div class="feature-card fade-in-up">
+                <div class="feature-icon fi-yellow">📈</div>
+                <h3>Long & Short Signals</h3>
+                <p>Profit in both bull and bear markets. AI generates directional signals with confidence scores for each trade.</p>
+            </div>
+            <div class="feature-card fade-in-up">
+                <div class="feature-icon fi-cyan">🧪</div>
+                <h3>Paper Trading Mode</h3>
+                <p>Test strategies risk-free with simulated trading. Validate model performance before committing real capital.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="how-it-works" id="how">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-sub">From data to trade in four simple steps</p>
+        <div class="steps">
+            <div class="step fade-in-up">
+                <div class="step-num">1</div>
+                <h3>Ingest Data</h3>
+                <p>Pull historical & live OHLCV data from Kraken for BTC and ETH pairs</p>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="step fade-in-up">
+                <div class="step-num">2</div>
+                <h3>AI Analysis</h3>
+                <p>ML model processes 50+ features and compares to historical patterns</p>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="step fade-in-up">
+                <div class="step-num">3</div>
+                <h3>Generate Signal</h3>
+                <p>Outputs LONG/SHORT/HOLD signal with confidence % and suggested position size</p>
+                <div class="step-arrow">→</div>
+            </div>
+            <div class="step fade-in-up">
+                <div class="step-num">4</div>
+                <h3>Execute Trade</h3>
+                <p>Auto-executes on Kraken with stop-loss and take-profit levels preset</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supported Exchanges -->
+    <div class="supported" id="exchanges">
+        <h2 class="section-title">Exchange Integration</h2>
+        <p class="section-sub">Connected to leading exchanges via secure API</p>
+        <div class="exchange-cards">
+            <div class="exchange-card fade-in-up">
+                <div class="name">🐙 Kraken</div>
+                <div class="status">✅ Primary • Live</div>
+            </div>
+            <div class="exchange-card fade-in-up">
+                <div class="name">🟡 Binance</div>
+                <div class="status">🔜 Coming Soon</div>
+            </div>
+            <div class="exchange-card fade-in-up">
+                <div class="name">🟢 Coinbase</div>
+                <div class="status">🔜 Coming Soon</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backtests -->
+    <div class="backtests" id="backtests">
+        <h2 class="section-title">Backtest Results</h2>
+        <p class="section-sub">Historical performance of our AI model on BTC/EUR (2023-2025)</p>
+        <div class="backtest-summary">
+            <div class="bt-summary-card fade-in-up">
+                <div class="val positive">+34.7%</div>
+                <div class="lbl">Total Return</div>
+            </div>
+            <div class="bt-summary-card fade-in-up">
+                <div class="val" style="color: var(--accent);">87.3%</div>
+                <div class="lbl">Win Rate</div>
+            </div>
+            <div class="bt-summary-card fade-in-up">
+                <div class="val negative">-8.2%</div>
+                <div class="lbl">Max Drawdown</div>
+            </div>
+            <div class="bt-summary-card fade-in-up">
+                <div class="val" style="color: var(--accent-purple);">2.4</div>
+                <div class="lbl">Sharpe Ratio</div>
+            </div>
+            <div class="bt-summary-card fade-in-up">
+                <div class="val" style="color: var(--accent-green);">156</div>
+                <div class="lbl">Total Trades</div>
+            </div>
+        </div>
+        <table class="backtest-table">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th>Return</th>
+                    <th>Trades</th>
+                    <th>Win Rate</th>
+                    <th>Max Drawdown</th>
+                    <th>Cumulative</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Jan 2025</td><td class="positive">+5.2%</td><td>14</td><td>85.7%</td><td>-2.1%</td><td class="positive">+34.7%</td></tr>
+                <tr><td>Dec 2024</td><td class="positive">+3.8%</td><td>12</td><td>83.3%</td><td>-3.4%</td><td class="positive">+29.5%</td></tr>
+                <tr><td>Nov 2024</td><td class="negative">-1.4%</td><td>11</td><td>72.7%</td><td>-5.1%</td><td class="positive">+25.7%</td></tr>
+                <tr><td>Oct 2024</td><td class="positive">+6.1%</td><td>15</td><td>93.3%</td><td>-1.8%</td><td class="positive">+27.1%</td></tr>
+                <tr><td>Sep 2024</td><td class="positive">+2.9%</td><td>13</td><td>84.6%</td><td>-2.7%</td><td class="positive">+21.0%</td></tr>
+                <tr><td>Aug 2024</td><td class="positive">+4.3%</td><td>14</td><td>85.7%</td><td>-3.2%</td><td class="positive">+18.1%</td></tr>
+                <tr><td>Jul 2024</td><td class="negative">-2.1%</td><td>10</td><td>70.0%</td><td>-8.2%</td><td class="positive">+13.8%</td></tr>
+                <tr><td>Jun 2024</td><td class="positive">+3.6%</td><td>12</td><td>91.7%</td><td>-1.5%</td><td class="positive">+15.9%</td></tr>
+                <tr><td>May 2024</td><td class="positive">+5.7%</td><td>16</td><td>87.5%</td><td>-2.4%</td><td class="positive">+12.3%</td></tr>
+                <tr><td>Apr 2024</td><td class="positive">+2.8%</td><td>11</td><td>90.9%</td><td>-1.9%</td><td class="positive">+6.6%</td></tr>
+                <tr><td>Mar 2024</td><td class="positive">+4.1%</td><td>14</td><td>85.7%</td><td>-3.0%</td><td class="positive">+3.8%</td></tr>
+                <tr><td>Feb 2024</td><td class="negative">-0.3%</td><td>14</td><td>78.6%</td><td>-4.6%</td><td class="negative">-0.3%</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta">
+        <div class="cta-box">
+            <h2>Ready to Trade with AI?</h2>
+            <p>Start with paper trading to see the AI in action. No real capital required.</p>
+            <div class="cta-buttons">
+                <button class="btn-primary">Start Free Paper Trading →</button>
+                <button class="btn-secondary" onclick="openModal('demoModal')">Schedule Demo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 CryptoEdge AI. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="#">Privacy</a>
+            <a href="#">Terms</a>
+            <a href="#">API Docs</a>
+            <a href="#">Contact</a>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('loginModal')">&times;</button>
+            <h2>Welcome Back</h2>
+            <p class="modal-sub">Sign in to access your trading dashboard</p>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="you@example.com" required>
+                    <div class="form-error">Please enter a valid email address</div>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required minlength="8">
+                    <div class="form-error">Password must be at least 8 characters</div>
+                </div>
+                <button type="submit" class="btn-primary">Sign In</button>
+            </form>
+            <div class="modal-footer">
+                Don't have an account? <a onclick="switchModal('loginModal','signupModal')">Sign up free</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Modal -->
+    <div class="modal-overlay" id="demoModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('demoModal')">&times;</button>
+            <div id="demoForm">
+                <h2>Schedule a Demo</h2>
+                <p class="modal-sub">See CryptoEdge AI in action with a personalized walkthrough</p>
+                <form onsubmit="handleDemo(event)">
+                    <div class="form-group">
+                        <label for="demoName">Your Name</label>
+                        <input type="text" id="demoName" placeholder="John Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demoEmail">Email Address</label>
+                        <input type="email" id="demoEmail" placeholder="you@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demoDate">Preferred Date</label>
+                        <input type="date" id="demoDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="demoTime">Preferred Time</label>
+                        <select id="demoTime">
+                            <option value="9:00">9:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="16:00">4:00 PM</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Request Demo</button>
+                </form>
+            </div>
+            <div id="demoSuccess" style="display:none;">
+                <div class="success-state">
+                    <div class="check">&#10003;</div>
+                    <h3>Demo Scheduled!</h3>
+                    <p>We'll send a calendar invite to your email with the meeting link. See you soon!</p>
+                    <button type="button" class="btn-primary" style="margin-top:20px" onclick="closeModal('demoModal')">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal-overlay" id="signupModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('signupModal')">&times;</button>
+            <h2>Get Started Free</h2>
+            <p class="modal-sub">Start paper trading with AI signals in minutes</p>
+            <div class="step-indicators">
+                <div class="step-indicator active" id="si1"></div>
+                <div class="step-indicator" id="si2"></div>
+                <div class="step-indicator" id="si3"></div>
+            </div>
+            <form id="signupForm">
+                <!-- Step 1: Account -->
+                <div class="form-step active" id="signupStep1">
+                    <div class="form-group">
+                        <label for="signupName">Full Name</label>
+                        <input type="text" id="signupName" placeholder="John Doe" required>
+                        <div class="form-error">Please enter your name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email Address</label>
+                        <input type="email" id="signupEmail" placeholder="you@example.com" required>
+                        <div class="form-error">Please enter a valid email</div>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="nextSignupStep(1)">Continue</button>
+                </div>
+                <!-- Step 2: Password -->
+                <div class="form-step" id="signupStep2">
+                    <div class="form-group">
+                        <label for="signupPass">Create Password</label>
+                        <input type="password" id="signupPass" placeholder="Min 8 characters" required minlength="8">
+                        <div class="form-error">Password must be at least 8 characters</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassConfirm">Confirm Password</label>
+                        <input type="password" id="signupPassConfirm" placeholder="Repeat password" required>
+                        <div class="form-error">Passwords do not match</div>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="nextSignupStep(2)">Continue</button>
+                </div>
+                <!-- Step 3: Preferences -->
+                <div class="form-step" id="signupStep3">
+                    <div class="form-group">
+                        <label for="signupExchange">Preferred Exchange</label>
+                        <select id="signupExchange">
+                            <option value="kraken">Kraken (Live)</option>
+                            <option value="binance">Binance (Coming Soon)</option>
+                            <option value="coinbase">Coinbase (Coming Soon)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupMode">Trading Mode</label>
+                        <select id="signupMode">
+                            <option value="paper">Paper Trading (Recommended)</option>
+                            <option value="live">Live Trading</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-primary" onclick="completeSignup()">Create Account</button>
+                </div>
+                <!-- Success -->
+                <div class="form-step" id="signupSuccess">
+                    <div class="success-state">
+                        <div class="check">&#10003;</div>
+                        <h3>Account Created!</h3>
+                        <p>Welcome to CryptoEdge AI. Your paper trading account is ready. Check your email for verification.</p>
+                        <button type="button" class="btn-primary" style="margin-top:20px" onclick="closeModal('signupModal')">Go to Dashboard</button>
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer" id="signupFooter">
+                Already have an account? <a onclick="switchModal('signupModal','loginModal')">Sign in</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="disclaimer">
+        ⚠️ Trading cryptocurrencies involves significant risk. Past performance and backtested results do not guarantee future returns. 
+        This platform is for informational purposes only and does not constitute financial advice. 
+        Always do your own research and never invest more than you can afford to lose.
+    </div>
+
+    <script>
+    // === Check if logged in - show dashboard link ===
+    if (localStorage.getItem('cryptoedge_token')) {
+        const getStartedBtn = document.getElementById('getStartedBtn');
+        getStartedBtn.textContent = 'Dashboard';
+        getStartedBtn.onclick = () => { window.location.href = '/dashboard'; };
+    }
+
+    // === Hamburger Menu ===
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navLinks.classList.toggle('open');
+    });
+    // Close menu on link click
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navLinks.classList.remove('open');
+        });
+    });
+
+    // === Active Nav Highlight on Scroll ===
+    const sections = document.querySelectorAll('[id]');
+    const navAnchors = navLinks.querySelectorAll('a[href^="#"]');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(section => {
+            const top = section.offsetTop - 100;
+            if (window.scrollY >= top) current = section.getAttribute('id');
+        });
+        navAnchors.forEach(a => {
+            a.classList.remove('active');
+            if (a.getAttribute('href') === '#' + current) a.classList.add('active');
+        });
+    });
+
+    // === Live Price Ticker ===
+    let basePrice = 96842;
+    function updatePrice() {
+        const change = (Math.random() - 0.48) * 200;
+        basePrice = Math.max(90000, Math.min(105000, basePrice + change));
+        const pctChange = ((basePrice - 96842) / 96842 * 100);
+        const priceEl = document.getElementById('livePrice');
+        const changeEl = document.getElementById('liveChange');
+        priceEl.textContent = '\u20AC' + Math.round(basePrice).toLocaleString();
+        const arrow = pctChange >= 0 ? '\u25B2' : '\u25BC';
+        changeEl.textContent = arrow + ' ' + (pctChange >= 0 ? '+' : '') + pctChange.toFixed(1) + '% (24h)';
+        changeEl.style.color = pctChange >= 0 ? '#10b981' : '#ef4444';
+        priceEl.style.color = pctChange >= 0 ? '#10b981' : '#ef4444';
+    }
+    setInterval(updatePrice, 3000);
+
+    // === Scroll Animations (IntersectionObserver) ===
+    const fadeEls = document.querySelectorAll('.fade-in-up');
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                fadeObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    fadeEls.forEach(el => fadeObserver.observe(el));
+
+    // === Modal System ===
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+        document.body.style.overflow = '';
+        // Reset forms
+        if (id === 'signupModal') resetSignup();
+        if (id === 'demoModal') {
+            document.getElementById('demoForm').style.display = '';
+            document.getElementById('demoSuccess').style.display = 'none';
+        }
+    }
+    function switchModal(from, to) {
+        closeModal(from);
+        setTimeout(() => openModal(to), 200);
+    }
+    // Close modal on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal(overlay.id);
+        });
+    });
+    // Close modal on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.active').forEach(m => closeModal(m.id));
+        }
+    });
+
+    // === Login Button Wiring ===
+    document.getElementById('loginBtn').addEventListener('click', () => openModal('loginModal'));
+    document.getElementById('getStartedBtn').addEventListener('click', () => openModal('signupModal'));
+    // Wire all "Start Paper Trading" and "Start Free Paper Trading" buttons
+    document.querySelectorAll('.btn-primary').forEach(btn => {
+        if (btn.textContent.includes('Paper Trading') && !btn.closest('.modal')) {
+            btn.addEventListener('click', () => openModal('signupModal'));
+        }
+    });
+
+    // === Login Form ===
+    async function handleLogin(e) {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail');
+        const pass = document.getElementById('loginPassword');
+        let valid = true;
+        if (!email.value || !email.validity.valid) {
+            email.classList.add('error');
+            valid = false;
+        } else { email.classList.remove('error'); }
+        if (!pass.value || pass.value.length < 8) {
+            pass.classList.add('error');
+            valid = false;
+        } else { pass.classList.remove('error'); }
+        if (!valid) return;
+
+        // Show loading
+        const btn = e.target.querySelector('button[type="submit"]');
+        const origText = btn.textContent;
+        btn.textContent = 'Signing in...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email.value, password: pass.value })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                pass.classList.add('error');
+                pass.nextElementSibling.textContent = data.error;
+                pass.nextElementSibling.classList.add('show');
+                return;
+            }
+            localStorage.setItem('cryptoedge_token', data.token);
+            localStorage.setItem('cryptoedge_user', JSON.stringify(data.user));
+            window.location.href = '/dashboard';
+        } catch (err) {
+            pass.classList.add('error');
+            pass.nextElementSibling.textContent = 'Connection error. Is the server running?';
+            pass.nextElementSibling.classList.add('show');
+        } finally {
+            btn.textContent = origText;
+            btn.disabled = false;
+        }
+    }
+
+    // === Signup Multi-Step ===
+    function nextSignupStep(current) {
+        if (current === 1) {
+            const name = document.getElementById('signupName');
+            const email = document.getElementById('signupEmail');
+            let valid = true;
+            if (!name.value.trim()) { name.classList.add('error'); valid = false; } else { name.classList.remove('error'); }
+            if (!email.value || !email.validity.valid) { email.classList.add('error'); valid = false; } else { email.classList.remove('error'); }
+            if (!valid) return;
+        }
+        if (current === 2) {
+            const pass = document.getElementById('signupPass');
+            const confirm = document.getElementById('signupPassConfirm');
+            let valid = true;
+            if (!pass.value || pass.value.length < 8) { pass.classList.add('error'); valid = false; } else { pass.classList.remove('error'); }
+            if (pass.value !== confirm.value) { confirm.classList.add('error'); valid = false; } else { confirm.classList.remove('error'); }
+            if (!valid) return;
+        }
+        document.getElementById('signupStep' + current).classList.remove('active');
+        document.getElementById('signupStep' + (current + 1)).classList.add('active');
+        document.getElementById('si' + current).classList.remove('active');
+        document.getElementById('si' + current).classList.add('done');
+        document.getElementById('si' + (current + 1)).classList.add('active');
+    }
+    async function completeSignup() {
+        const name = document.getElementById('signupName').value;
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPass').value;
+        const exchange_pref = document.getElementById('signupExchange').value;
+        const trading_mode = document.getElementById('signupMode').value;
+
+        const btn = document.querySelector('#signupStep3 .btn-primary');
+        btn.textContent = 'Creating account...';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password, exchange_pref, trading_mode })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                btn.textContent = 'Create Account';
+                btn.disabled = false;
+                alert(data.error);
+                return;
+            }
+            localStorage.setItem('cryptoedge_token', data.token);
+            localStorage.setItem('cryptoedge_user', JSON.stringify(data.user));
+
+            document.getElementById('signupStep3').classList.remove('active');
+            document.getElementById('signupSuccess').classList.add('active');
+            document.getElementById('si3').classList.remove('active');
+            document.getElementById('si3').classList.add('done');
+            document.getElementById('signupFooter').style.display = 'none';
+
+            // Update success button to go to dashboard
+            document.querySelector('#signupSuccess .btn-primary').onclick = () => { window.location.href = '/dashboard'; };
+        } catch (err) {
+            btn.textContent = 'Create Account';
+            btn.disabled = false;
+            alert('Connection error. Is the server running?');
+        }
+    }
+    function resetSignup() {
+        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+        document.getElementById('signupStep1').classList.add('active');
+        document.querySelectorAll('.step-indicator').forEach(s => { s.classList.remove('active','done'); });
+        document.getElementById('si1').classList.add('active');
+        document.getElementById('signupFooter').style.display = '';
+        document.querySelectorAll('#signupForm input').forEach(i => { i.value = ''; i.classList.remove('error'); });
+    }
+
+    // === Demo Form ===
+    function handleDemo(e) {
+        e.preventDefault();
+        document.getElementById('demoForm').style.display = 'none';
+        document.getElementById('demoSuccess').style.display = '';
+    }
+
+    // === WebSocket for live prices on landing page ===
+    (function connectLivePrice() {
+        try {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const ws = new WebSocket(protocol + '//' + location.host + '/ws');
+            ws.onmessage = function(event) {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'ticker' && msg.data['BTC/EUR']) {
+                    const btc = msg.data['BTC/EUR'];
+                    document.getElementById('livePrice').textContent = '\u20AC' + Math.round(btc.price).toLocaleString();
+                    const el = document.getElementById('liveChange');
+                    el.textContent = (btc.change_24h >= 0 ? '\u25B2 +' : '\u25BC ') + btc.change_24h.toFixed(1) + '% (24h)';
+                    el.style.color = btc.change_24h >= 0 ? '#10b981' : '#ef4444';
+                    document.getElementById('livePrice').style.color = btc.change_24h >= 0 ? '#10b981' : '#ef4444';
+                }
+            };
+            ws.onclose = function() { setTimeout(connectLivePrice, 5000); };
+        } catch(e) { /* server not running, use simulated ticker */ }
+    })();
+
+    // === Set min date for demo date picker ===
+    const demoDate = document.getElementById('demoDate');
+    const today = new Date().toISOString().split('T')[0];
+    demoDate.setAttribute('min', today);
+    demoDate.value = today;
+    </script>
+</body>
+</html>
