@@ -19,16 +19,16 @@
         a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         
         :root {
-            --bg-primary: #0a0e17;
-            --bg-secondary: #111827;
-            --bg-card: #1a2235;
-            --accent: #3b82f6;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --accent-purple: #8b5cf6;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --border: #1e293b;
+            --bg-primary: #0c1616;
+            --bg-secondary: #111c1c;
+            --bg-card: #162121;
+            --accent: #3ecf8e;
+            --accent-green: #3ecf8e;
+            --accent-red: #f87171;
+            --accent-purple: #a78bfa;
+            --text-primary: #f0f0f0;
+            --text-secondary: #7a8a8a;
+            --border: #1e2e2e;
         }
 
         body {
@@ -45,7 +45,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 20px 60px;
-            background: rgba(10, 14, 23, 0.95);
+            background: rgba(12, 22, 22, 0.97);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
             position: fixed;
@@ -57,20 +57,15 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0;
             font-size: 24px;
-            font-weight: 700;
+            font-weight: 600;
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: -0.5px;
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            display: none;
         }
 
         .nav-links { display: flex; gap: 30px; align-items: center; }
@@ -79,30 +74,30 @@
         .nav-links a.active { color: var(--accent); }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
-            color: white;
+            background: #fff;
+            color: #0c1616;
             border: none;
             padding: 12px 28px;
-            border-radius: 8px;
+            border-radius: 100px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: opacity 0.2s;
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3); }
+        .btn-primary:hover { opacity: 0.85; }
 
         .btn-secondary {
             background: transparent;
             color: var(--text-primary);
             border: 1px solid var(--border);
             padding: 12px 28px;
-            border-radius: 8px;
+            border-radius: 100px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
         }
-        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-secondary:hover { border-color: #3a4a4a; color: #fff; }
 
         /* Hero */
         .hero {
@@ -121,8 +116,8 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(62, 207, 142, 0.1);
+            border: 1px solid rgba(62, 207, 142, 0.2);
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 13px;
@@ -135,18 +130,16 @@
 
         h1 {
             font-size: 52px;
-            font-weight: 800;
+            font-weight: 400;
             line-height: 1.15;
             margin-bottom: 20px;
-            background: linear-gradient(135deg, #fff, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-primary);
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: -1px;
         }
 
         h1 span {
-            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-primary);
         }
 
         .hero p { font-size: 18px; color: var(--text-secondary); margin-bottom: 36px; max-width: 520px; }
@@ -170,7 +163,7 @@
         }
 
         .chart-pair { font-size: 18px; font-weight: 700; }
-        .chart-price { font-size: 28px; font-weight: 800; color: var(--accent-green); }
+        .chart-price { font-size: 28px; font-weight: 400; color: var(--accent-green); font-family: Georgia, 'Times New Roman', serif; }
         .chart-change { font-size: 14px; color: var(--accent-green); }
 
         .chart-svg { width: 100%; height: 200px; }
@@ -195,7 +188,7 @@
             position: absolute;
             top: 80px;
             right: 40px;
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(62, 207, 142, 0.15);
             border: 1px solid var(--accent-green);
             color: var(--accent-green);
             padding: 8px 16px;
@@ -225,10 +218,10 @@
             text-align: center;
         }
 
-        .stat-value { font-size: 36px; font-weight: 800; margin-bottom: 4px; }
-        .stat-value.green { color: var(--accent-green); }
-        .stat-value.blue { color: var(--accent); }
-        .stat-value.purple { color: var(--accent-purple); }
+        .stat-value { font-size: 32px; font-weight: 400; margin-bottom: 4px; font-family: Georgia, 'Times New Roman', serif; letter-spacing: -0.5px; }
+        .stat-value.green { color: var(--text-primary); }
+        .stat-value.blue { color: var(--text-primary); }
+        .stat-value.purple { color: var(--text-primary); }
         .stat-label { font-size: 14px; color: var(--text-secondary); }
 
         /* Features */
@@ -241,8 +234,10 @@
         .section-title {
             text-align: center;
             font-size: 38px;
-            font-weight: 800;
+            font-weight: 400;
             margin-bottom: 12px;
+            font-family: Georgia, 'Times New Roman', serif;
+            letter-spacing: -0.5px;
         }
 
         .section-sub {
@@ -268,26 +263,24 @@
             padding: 32px;
             transition: transform 0.3s, border-color 0.3s;
         }
-        .feature-card:hover { transform: translateY(-4px); border-color: var(--accent); }
+        .feature-card:hover { border-color: #2a3a3a; }
 
         .feature-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
             margin-bottom: 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            color: var(--accent);
         }
-        .fi-blue { background: rgba(59, 130, 246, 0.15); }
-        .fi-green { background: rgba(16, 185, 129, 0.15); }
-        .fi-purple { background: rgba(139, 92, 246, 0.15); }
-        .fi-red { background: rgba(239, 68, 68, 0.15); }
-        .fi-yellow { background: rgba(245, 158, 11, 0.15); }
-        .fi-cyan { background: rgba(6, 182, 212, 0.15); }
+        .feature-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        .fi-blue, .fi-green, .fi-purple, .fi-red, .fi-yellow, .fi-cyan { background: var(--bg-secondary); }
 
-        .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
         .feature-card p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
 
         /* How it works */
@@ -312,13 +305,16 @@
         .step-num {
             width: 56px;
             height: 56px;
-            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
-            font-weight: 800;
+            font-size: 20px;
+            font-weight: 600;
+            font-family: Georgia, 'Times New Roman', serif;
             margin: 0 auto 20px;
         }
 
@@ -366,15 +362,15 @@
         }
 
         .cta-box {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 24px;
             padding: 60px;
             max-width: 800px;
             margin: 0 auto;
         }
 
-        .cta-box h2 { font-size: 34px; font-weight: 800; margin-bottom: 16px; }
+        .cta-box h2 { font-size: 34px; font-weight: 400; margin-bottom: 16px; font-family: Georgia, 'Times New Roman', serif; letter-spacing: -0.5px; }
         .cta-box p { color: var(--text-secondary); font-size: 17px; margin-bottom: 32px; }
         .cta-buttons { display: flex; gap: 16px; justify-content: center; }
 
@@ -520,7 +516,7 @@
             line-height: 1;
         }
         .modal-close:hover { color: var(--text-primary); }
-        .modal h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+        .modal h2 { font-size: 24px; font-weight: 400; margin-bottom: 8px; font-family: Georgia, 'Times New Roman', serif; }
         .modal .modal-sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
         .form-group { margin-bottom: 20px; }
         .form-group label {
@@ -591,7 +587,7 @@
             font-size: 14px;
             border-top: 1px solid var(--border);
         }
-        .backtest-table tr:hover td { background: rgba(59, 130, 246, 0.04); }
+        .backtest-table tr:hover td { background: rgba(62, 207, 142, 0.04); }
         .positive { color: var(--accent-green); font-weight: 600; }
         .negative { color: var(--accent-red); font-weight: 600; }
         .backtest-summary {
@@ -609,7 +605,7 @@
             padding: 20px;
             text-align: center;
         }
-        .bt-summary-card .val { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+        .bt-summary-card .val { font-size: 28px; font-weight: 400; margin-bottom: 4px; font-family: Georgia, 'Times New Roman', serif; }
         .bt-summary-card .lbl { font-size: 13px; color: var(--text-secondary); }
 
         @media (max-width: 768px) {
@@ -641,7 +637,7 @@
         }
         .success-state .check {
             width: 64px; height: 64px;
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(62, 207, 142, 0.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -684,8 +680,7 @@
     <!-- Nav -->
     <nav role="navigation" aria-label="Main navigation">
         <div class="logo">
-            <div class="logo-icon">⚡</div>
-            CryptoEdge <span style="color: var(--accent); font-weight: 400;">AI</span>
+            CryptoEdge<span style="color: var(--text-secondary); font-weight: 400;">.</span>
         </div>
         <button class="hamburger" id="hamburger" aria-label="Toggle menu">
             <span></span><span></span><span></span>
@@ -726,21 +721,21 @@
                         <div class="chart-change price-tick" id="liveChange">▲ +3.2% (24h)</div>
                     </div>
                 </div>
-                <div class="chart-signal">🎯 AI Signal: LONG • 87% confidence</div>
+                <div class="chart-signal"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;stroke:#3ecf8e;fill:none;stroke-width:2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>AI Signal: LONG - 87% confidence</div>
                 <svg class="chart-svg" viewBox="0 0 500 200" preserveAspectRatio="none">
                     <defs>
                         <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
-                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                            <stop offset="0%" stop-color="#3ecf8e" stop-opacity="0.3"/>
+                            <stop offset="100%" stop-color="#3ecf8e" stop-opacity="0"/>
                         </linearGradient>
                     </defs>
                     <path class="animated-line" d="M0,150 Q25,140 50,145 T100,130 T150,135 T200,110 T250,120 T300,90 T350,95 T400,60 T450,55 T500,40"
-                          fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+                          fill="none" stroke="#3ecf8e" stroke-width="2.5"/>
                     <path class="animated-fill" d="M0,150 Q25,140 50,145 T100,130 T150,135 T200,110 T250,120 T300,90 T350,95 T400,60 T450,55 T500,40 L500,200 L0,200 Z"
                           fill="url(#chartGrad)"/>
-                    <circle cx="400" cy="60" r="5" fill="#10b981" stroke="#0a0e17" stroke-width="2"/>
-                    <circle cx="300" cy="90" r="5" fill="#ef4444" stroke="#0a0e17" stroke-width="2"/>
-                    <text x="405" y="55" fill="#10b981" font-size="10" font-weight="bold">BUY</text>
+                    <circle cx="400" cy="60" r="5" fill="#3ecf8e" stroke="#0c1616" stroke-width="2"/>
+                    <circle cx="300" cy="90" r="5" fill="#ef4444" stroke="#0c1616" stroke-width="2"/>
+                    <text x="405" y="55" fill="#3ecf8e" font-size="10" font-weight="bold">BUY</text>
                     <text x="280" y="85" fill="#ef4444" font-size="10" font-weight="bold">SELL</text>
                 </svg>
                 <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-secondary);">
@@ -776,32 +771,32 @@
         <p class="section-sub">Advanced ML models trained on years of crypto market data to identify profitable patterns</p>
         <div class="features-grid">
             <div class="feature-card fade-in-up">
-                <div class="feature-icon fi-blue">🧠</div>
+                <div class="feature-icon fi-blue"><svg viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg></div>
                 <h3>LSTM Neural Networks</h3>
                 <p>Deep learning models that understand temporal patterns in price movements, trained on 5+ years of BTC/ETH data.</p>
             </div>
             <div class="feature-card fade-in-up">
-                <div class="feature-icon fi-green">📊</div>
+                <div class="feature-icon fi-green"><svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="3" width="4" height="18"/></svg></div>
                 <h3>Technical Analysis</h3>
                 <p>50+ technical indicators including RSI, MACD, Bollinger Bands, and volume analysis computed automatically.</p>
             </div>
             <div class="feature-card fade-in-up">
-                <div class="feature-icon fi-purple">🔗</div>
+                <div class="feature-icon fi-purple"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
                 <h3>Kraken API Integration</h3>
                 <p>Direct connection to Kraken exchange. Place market/limit orders, manage positions, and track P&L automatically.</p>
             </div>
             <div class="feature-card fade-in-up">
-                <div class="feature-icon fi-red">🛡️</div>
+                <div class="feature-icon fi-red"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
                 <h3>Risk Management</h3>
                 <p>Built-in stop-losses, position sizing, max drawdown limits, and portfolio heat controls to protect your capital.</p>
             </div>
             <div class="feature-card fade-in-up">
-                <div class="feature-icon fi-yellow">📈</div>
+                <div class="feature-icon fi-yellow"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
                 <h3>Long & Short Signals</h3>
                 <p>Profit in both bull and bear markets. AI generates directional signals with confidence scores for each trade.</p>
             </div>
             <div class="feature-card fade-in-up">
-                <div class="feature-icon fi-cyan">🧪</div>
+                <div class="feature-icon fi-cyan"><svg viewBox="0 0 24 24"><path d="M9 3h6v5.586l4.707 4.707A1 1 0 0 1 19 15h-14a1 1 0 0 1-.707-1.707L9 8.586V3z"/><line x1="9" y1="3" x2="15" y2="3"/><path d="M6 21h12"/></svg></div>
                 <h3>Paper Trading Mode</h3>
                 <p>Test strategies risk-free with simulated trading. Validate model performance before committing real capital.</p>
             </div>
@@ -845,16 +840,16 @@
         <p class="section-sub">Connected to leading exchanges via secure API</p>
         <div class="exchange-cards">
             <div class="exchange-card fade-in-up">
-                <div class="name">🐙 Kraken</div>
-                <div class="status">✅ Primary • Live</div>
+                <div class="name">Kraken</div>
+                <div class="status"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;stroke:#3ecf8e;fill:none;stroke-width:2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Primary - Live</div>
             </div>
             <div class="exchange-card fade-in-up">
-                <div class="name">🟡 Binance</div>
-                <div class="status">🔜 Coming Soon</div>
+                <div class="name">Binance</div>
+                <div class="status">Coming Soon</div>
             </div>
             <div class="exchange-card fade-in-up">
-                <div class="name">🟢 Coinbase</div>
-                <div class="status">🔜 Coming Soon</div>
+                <div class="name">Coinbase</div>
+                <div class="status">Coming Soon</div>
             </div>
         </div>
     </div>
@@ -1083,7 +1078,7 @@
     </div>
 
     <div class="disclaimer">
-        ⚠️ Trading cryptocurrencies involves significant risk. Past performance and backtested results do not guarantee future returns. 
+        Trading cryptocurrencies involves significant risk. Past performance and backtested results do not guarantee future returns. 
         This platform is for informational purposes only and does not constitute financial advice. 
         Always do your own research and never invest more than you can afford to lose.
     </div>
@@ -1137,8 +1132,8 @@
         priceEl.textContent = '\u20AC' + Math.round(basePrice).toLocaleString();
         const arrow = pctChange >= 0 ? '\u25B2' : '\u25BC';
         changeEl.textContent = arrow + ' ' + (pctChange >= 0 ? '+' : '') + pctChange.toFixed(1) + '% (24h)';
-        changeEl.style.color = pctChange >= 0 ? '#10b981' : '#ef4444';
-        priceEl.style.color = pctChange >= 0 ? '#10b981' : '#ef4444';
+        changeEl.style.color = pctChange >= 0 ? '#3ecf8e' : '#f87171';
+        priceEl.style.color = pctChange >= 0 ? '#3ecf8e' : '#f87171';
     }
     setInterval(updatePrice, 3000);
 
@@ -1337,8 +1332,8 @@
                     document.getElementById('livePrice').textContent = '\u20AC' + Math.round(btc.price).toLocaleString();
                     const el = document.getElementById('liveChange');
                     el.textContent = (btc.change_24h >= 0 ? '\u25B2 +' : '\u25BC ') + btc.change_24h.toFixed(1) + '% (24h)';
-                    el.style.color = btc.change_24h >= 0 ? '#10b981' : '#ef4444';
-                    document.getElementById('livePrice').style.color = btc.change_24h >= 0 ? '#10b981' : '#ef4444';
+                    el.style.color = btc.change_24h >= 0 ? '#3ecf8e' : '#f87171';
+                    document.getElementById('livePrice').style.color = btc.change_24h >= 0 ? '#3ecf8e' : '#f87171';
                 }
             };
             ws.onclose = function() { setTimeout(connectLivePrice, 5000); };
