@@ -82,6 +82,7 @@ function getTradeHistory(userId, limit = 50) {
 function getPortfolioSummary(userId) {
     const db = getDB();
     const user = db.prepare('SELECT balance FROM users WHERE id = ?').get(userId);
+    if (!user) throw new Error('User not found');
     const openTrades = db.prepare('SELECT * FROM trades WHERE user_id = ? AND status = ?').all(userId, 'open');
     const closedTrades = db.prepare(`
         SELECT COUNT(*) as total, SUM(pnl) as total_pnl,
