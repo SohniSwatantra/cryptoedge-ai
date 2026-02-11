@@ -9,7 +9,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: JWT_SECRET
-        generateValue: true
+        value: 152101872d40a7cc39065415102933489c4b3d1f64e516c78abaff45bc6b9838
       - key: DB_PATH
         value: /opt/render/project/data/cryptoedge.db
       - key: KRAKEN_API_URL
