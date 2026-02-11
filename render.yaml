@@ -23,7 +23,7 @@ services:
       - key: KIMI_API_URL
         value: https://api.moonshot.ai/v1/chat/completions
       - key: KIMI_MODEL_ID
-        value: kimi-k2.5-preview
+        value: kimi-k2.5
       - key: LLM_SIGNAL_ENABLED
         value: "true"
     disk:

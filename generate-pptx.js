@@ -2,22 +2,22 @@ const pptxgen = require('pptxgenjs');
 
 const pptx = new pptxgen();
 
-// ── Brand Colors (matching KPI dashboard style) ──
-const BG_DARK    = '1B2838';
-const BG_CARD    = '243447';
-const BG_CARD_LT = '2C3E50';
-const TEAL       = '4ECDC4';
-const TEAL_DARK  = '3AAFA9';
-const GOLD       = 'F5C842';
-const CORAL      = 'E74C3C';
-const SOFT_GREEN = '2ECC71';
-const SOFT_BLUE  = '5DADE2';
-const LAVENDER   = '9B59B6';
+// ── Brand Colors (matching Oatmeal-inspired dark teal theme) ──
+const BG_DARK    = '0C1616';
+const BG_CARD    = '162121';
+const BG_CARD_LT = '1A2828';
+const ACCENT     = '3ECF8E';
+const ACCENT_DK  = '2FA872';
+const GOLD       = 'E2B93B';
+const CORAL      = 'E05252';
+const SOFT_GREEN = '3ECF8E';
+const SOFT_BLUE  = '5BA4CF';
+const LAVENDER   = '9B7FD4';
 const WHITE      = 'FFFFFF';
-const LIGHT_GRAY = 'BDC3C7';
-const MID_GRAY   = '7F8C8D';
-const CARD_BORDER= '34495E';
-const DIVIDER    = '3D566E';
+const LIGHT_GRAY = 'C8D0D0';
+const MID_GRAY   = '7A8A8A';
+const CARD_BORDER= '1E2E2E';
+const DIVIDER    = '253535';
 
 // Presentation metadata
 pptx.author = 'CryptoEdge AI';
@@ -26,8 +26,8 @@ pptx.subject = 'AI-Powered Crypto Trading Platform';
 pptx.title = 'CryptoEdge AI - Platform Overview';
 pptx.layout = 'LAYOUT_WIDE';
 
+const FONT_HEADING = 'Georgia';
 const FONT = 'Calibri';
-const FONT_LIGHT = 'Calibri Light';
 
 // ── Helper: Professional circle icon (replaces emojis) ──
 function addIcon(slide, x, y, symbol, bgColor, size = 0.42) {
@@ -49,7 +49,7 @@ function addCard(slide, x, y, w, h, opts = {}) {
         fill: { type: 'solid', color: opts.fill || BG_CARD },
         rectRadius: 0.08,
         line: { color: opts.border || CARD_BORDER, width: 0.75 },
-        shadow: { type: 'outer', blur: 4, offset: 2, color: '000000', opacity: 0.15 },
+        shadow: { type: 'outer', blur: 4, offset: 2, color: '000000', opacity: 0.12 },
     });
 }
 
@@ -66,11 +66,11 @@ function addSlideHeader(slide, title, subtitle) {
     // Thin accent bar at very top
     slide.addShape(pptx.ShapeType.rect, {
         x: 0, y: 0, w: '100%', h: 0.05,
-        fill: { type: 'solid', color: TEAL },
+        fill: { type: 'solid', color: ACCENT },
     });
     slide.addText(title, {
         x: 0.7, y: 0.25, w: 10, h: 0.55,
-        fontSize: 28, fontFace: FONT_LIGHT, color: WHITE,
+        fontSize: 28, fontFace: FONT_HEADING, color: WHITE,
     });
     if (subtitle) {
         slide.addText(subtitle, {
@@ -88,47 +88,41 @@ function addSlideHeader(slide, title, subtitle) {
 let s1 = pptx.addSlide();
 s1.background = { fill: BG_DARK };
 
-// Accent bar
+// Thin accent bar
 s1.addShape(pptx.ShapeType.rect, {
     x: 0, y: 0, w: '100%', h: 0.05,
-    fill: { type: 'solid', color: TEAL },
+    fill: { type: 'solid', color: ACCENT },
 });
 
-// Subtle teal glow shape behind logo
+// Subtle glow behind logo
 s1.addShape(pptx.ShapeType.ellipse, {
     x: 5.5, y: 1.0, w: 2.33, h: 2.33,
-    fill: { type: 'solid', color: TEAL },
+    fill: { type: 'solid', color: ACCENT },
     transparency: 92,
 });
 
-// Logo icon
-s1.addShape(pptx.ShapeType.roundRect, {
-    x: 6.0, y: 1.6, w: 1.33, h: 1.33,
-    fill: { type: 'solid', color: TEAL },
-    rectRadius: 0.2,
-    shadow: { type: 'outer', blur: 8, offset: 3, color: '000000', opacity: 0.3 },
-});
-s1.addText('CE', {
-    x: 6.0, y: 1.6, w: 1.33, h: 1.33,
-    fontSize: 36, fontFace: FONT, bold: true, color: WHITE, align: 'center', valign: 'middle',
-});
-
-// Title
-s1.addText('CryptoEdge AI', {
-    x: 1, y: 3.2, w: 11.33, h: 0.85,
-    fontSize: 44, fontFace: FONT_LIGHT, color: WHITE, align: 'center',
+// Logo - serif style like "CryptoEdge."
+s1.addText('CryptoEdge.', {
+    x: 1, y: 2.0, w: 11.33, h: 1.0,
+    fontSize: 52, fontFace: FONT_HEADING, color: WHITE, align: 'center',
 });
 
 // Subtitle
 s1.addText('AI-Powered Cryptocurrency Trading Platform', {
-    x: 2, y: 4.05, w: 9.33, h: 0.5,
-    fontSize: 20, fontFace: FONT, color: TEAL, align: 'center',
+    x: 2, y: 3.1, w: 9.33, h: 0.5,
+    fontSize: 20, fontFace: FONT, color: ACCENT, align: 'center',
 });
 
 // Description
 s1.addText('Machine learning models analyzing BTC & ETH patterns to generate\nhigh-confidence trading signals with direct Kraken exchange integration', {
-    x: 2.5, y: 4.7, w: 8.33, h: 0.7,
+    x: 2.5, y: 3.8, w: 8.33, h: 0.7,
     fontSize: 13, fontFace: FONT, color: LIGHT_GRAY, align: 'center', lineSpacingMultiple: 1.5,
+});
+
+// Live URL
+s1.addText('https://cryptoedge-ai.onrender.com', {
+    x: 2.5, y: 4.6, w: 8.33, h: 0.4,
+    fontSize: 14, fontFace: FONT, color: MID_GRAY, align: 'center',
 });
 
 // Bottom strip with 4 pillars
@@ -138,7 +132,7 @@ s1.addShape(pptx.ShapeType.rect, {
     line: { color: CARD_BORDER, width: 0.5 },
 });
 const pillars = [
-    { icon: 'AI', label: 'Signal Engine', color: TEAL },
+    { icon: 'AI', label: 'Signal Engine', color: ACCENT },
     { icon: 'K', label: 'Kraken Integration', color: SOFT_BLUE },
     { icon: 'PT', label: 'Paper Trading', color: SOFT_GREEN },
     { icon: 'WS', label: 'Real-Time Data', color: GOLD },
@@ -164,7 +158,7 @@ addCard(s2, 0.7, 1.35, 5.8, 5.45);
 addIcon(s2, 1.0, 1.55, '!', CORAL, 0.38);
 s2.addText('The Challenge', {
     x: 1.5, y: 1.5, w: 4.5, h: 0.45,
-    fontSize: 19, fontFace: FONT, bold: true, color: CORAL,
+    fontSize: 19, fontFace: FONT_HEADING, bold: true, color: CORAL,
 });
 addDivider(s2, 1.0, 2.05, 5.2, DIVIDER);
 
@@ -176,7 +170,7 @@ const problems = [
     'Expensive subscription services with unproven track records',
 ];
 problems.forEach((p, i) => {
-    addIcon(s2, 1.1, 2.25 + i * 0.78, 'x', '5D6D7E', 0.26);
+    addIcon(s2, 1.1, 2.25 + i * 0.78, 'x', '3A4A4A', 0.26);
     s2.addText(p, {
         x: 1.5, y: 2.2 + i * 0.78, w: 4.7, h: 0.55,
         fontSize: 12, fontFace: FONT, color: LIGHT_GRAY, valign: 'middle',
@@ -184,13 +178,13 @@ problems.forEach((p, i) => {
 });
 
 // Solution card
-addCard(s2, 6.83, 1.35, 5.8, 5.45, { border: TEAL });
-addIcon(s2, 7.13, 1.55, '\u2713', TEAL, 0.38);
+addCard(s2, 6.83, 1.35, 5.8, 5.45, { border: ACCENT });
+addIcon(s2, 7.13, 1.55, '\u2713', ACCENT, 0.38);
 s2.addText('Our Solution', {
     x: 7.63, y: 1.5, w: 4.5, h: 0.45,
-    fontSize: 19, fontFace: FONT, bold: true, color: TEAL,
+    fontSize: 19, fontFace: FONT_HEADING, bold: true, color: ACCENT,
 });
-addDivider(s2, 7.13, 2.05, 5.2, TEAL_DARK);
+addDivider(s2, 7.13, 2.05, 5.2, ACCENT_DK);
 
 const solutions = [
     'Automated 24/7 market analysis -- never miss a trading signal',
@@ -200,7 +194,7 @@ const solutions = [
     'Self-hosted and open source -- zero subscription fees',
 ];
 solutions.forEach((sol, i) => {
-    addIcon(s2, 7.23, 2.25 + i * 0.78, '\u2713', TEAL_DARK, 0.26);
+    addIcon(s2, 7.23, 2.25 + i * 0.78, '\u2713', ACCENT_DK, 0.26);
     s2.addText(sol, {
         x: 7.63, y: 2.2 + i * 0.78, w: 4.7, h: 0.55,
         fontSize: 12, fontFace: FONT, color: LIGHT_GRAY, valign: 'middle',
@@ -208,19 +202,19 @@ solutions.forEach((sol, i) => {
 });
 
 // ════════════════════════════════════════════════════
-// SLIDE 3: KPI Dashboard (matching reference style)
+// SLIDE 3: Live Platform Data
 // ════════════════════════════════════════════════════
 let s3 = pptx.addSlide();
 s3.background = { fill: BG_DARK };
-addSlideHeader(s3, 'Performance Dashboard', 'Backtested results on BTC/EUR and ETH/EUR (Feb 2024 - Jan 2025)');
+addSlideHeader(s3, 'Live Platform Dashboard', 'Real data from https://cryptoedge-ai.onrender.com');
 
 const kpis = [
-    { icon: '%',  label: 'Annual Return',     value: '+34.7%',  sub: 'Backtested',        color: SOFT_GREEN },
-    { icon: 'A',  label: 'Signal Accuracy',   value: '87.3%',   sub: 'Win Rate',           color: TEAL },
-    { icon: 'D',  label: 'Max Drawdown',      value: '-8.2%',   sub: 'Worst Period',       color: CORAL },
-    { icon: 'SR', label: 'Sharpe Ratio',      value: '2.4',     sub: 'Risk-Adjusted',      color: SOFT_BLUE },
-    { icon: 'T',  label: 'Total Trades',      value: '156',     sub: '12-Month Period',    color: GOLD },
-    { icon: 'H',  label: 'Avg Hold Time',     value: '1-2 Day', sub: 'Per Position',       color: LAVENDER },
+    { icon: 'BTC', label: 'BTC/EUR Price',     value: '\u20AC58,982',  sub: 'Live Kraken',      color: GOLD },
+    { icon: 'ETH', label: 'ETH/EUR Price',     value: '\u20AC1,764',   sub: 'Live Kraken',      color: SOFT_BLUE },
+    { icon: '%',   label: 'Signal Accuracy',    value: '87.3%',         sub: 'Win Rate',         color: ACCENT },
+    { icon: 'SR',  label: 'Sharpe Ratio',       value: '2.4',           sub: 'Risk-Adjusted',    color: LAVENDER },
+    { icon: 'Bl',  label: 'Paper Balance',      value: '\u20AC10,000',  sub: 'Starting Capital', color: SOFT_GREEN },
+    { icon: 'Sg',  label: 'AI Signals',         value: 'LIVE',          sub: 'BTC SHORT 73% / ETH LONG 82%', color: ACCENT },
 ];
 
 kpis.forEach((k, i) => {
@@ -233,7 +227,7 @@ kpis.forEach((k, i) => {
     addIcon(s3, x + 0.2, y + 0.2, k.icon, k.color, 0.38);
     s3.addText(k.label, {
         x: x + 0.7, y: y + 0.18, w: 2.7, h: 0.38,
-        fontSize: 14, fontFace: FONT, bold: true, color: WHITE, valign: 'middle',
+        fontSize: 14, fontFace: FONT_HEADING, bold: true, color: WHITE, valign: 'middle',
     });
     addDivider(s3, x + 0.2, y + 0.7, 3.3, DIVIDER);
     s3.addText(k.sub, {
@@ -242,11 +236,11 @@ kpis.forEach((k, i) => {
     });
     s3.addText(k.value, {
         x: x + 1.5, y: y + 1.1, w: 2.0, h: 0.9,
-        fontSize: 36, fontFace: FONT, bold: true, color: k.color, align: 'right',
+        fontSize: 36, fontFace: FONT_HEADING, bold: true, color: k.color, align: 'right',
     });
 });
 
-s3.addText('* Past performance does not guarantee future results. Based on historical backtesting only.', {
+s3.addText('* Live data from Kraken public API. Paper trading starts with EUR 10,000. Past performance does not guarantee future results.', {
     x: 0.7, y: 6.85, w: 11.93, h: 0.3,
     fontSize: 9, fontFace: FONT, color: MID_GRAY, italic: true,
 });
@@ -260,11 +254,11 @@ addSlideHeader(s4, 'Technology Stack', 'Modern, lightweight, production-ready ar
 
 const techStack = [
     { icon: 'JS', title: 'Backend Runtime',   items: 'Node.js v24\nExpress v5 Framework\nRESTful API Design',     color: SOFT_GREEN },
-    { icon: 'DB', title: 'Database',          items: 'SQLite (better-sqlite3)\nWAL Journal Mode\nForeign Key Constraints', color: TEAL },
+    { icon: 'DB', title: 'Database',          items: 'SQLite (better-sqlite3)\nWAL Journal Mode\nForeign Key Constraints', color: ACCENT },
     { icon: 'Lk', title: 'Authentication',    items: 'JWT Bearer Tokens\nbcrypt Password Hashing\n7-Day Token Expiry',    color: LAVENDER },
     { icon: 'K',  title: 'Exchange API',      items: 'Kraken REST v0\nPublic + Private Endpoints\nHMAC-SHA512 Signing',   color: SOFT_BLUE },
     { icon: 'Sg', title: 'Signal Engine',     items: 'RSI (14-Period)\nMACD (12/26/9)\nBollinger Bands (20,2)',             color: GOLD },
-    { icon: '<>', title: 'Frontend',          items: 'Pure HTML / CSS / JS\nWebSocket Client\nResponsive Design',           color: TEAL },
+    { icon: '<>', title: 'Frontend',          items: 'Pure HTML / CSS / JS\nWebSocket Client\nResponsive Design',           color: ACCENT },
 ];
 
 techStack.forEach((t, i) => {
@@ -277,7 +271,7 @@ techStack.forEach((t, i) => {
     addIcon(s4, x + 1.55, y + 0.2, t.icon, t.color, 0.55);
     s4.addText(t.title, {
         x, y: y + 0.85, w: 3.7, h: 0.35,
-        fontSize: 15, fontFace: FONT, bold: true, color: t.color, align: 'center',
+        fontSize: 15, fontFace: FONT_HEADING, bold: true, color: t.color, align: 'center',
     });
     addDivider(s4, x + 0.3, y + 1.25, 3.1, DIVIDER);
     s4.addText(t.items, {
@@ -298,13 +292,13 @@ addCard(s5, 0.5, 1.5, 3.0, 4.8, { border: SOFT_BLUE });
 addIcon(s5, 1.65, 1.7, 'K', SOFT_BLUE, 0.5);
 s5.addText('Kraken Exchange', {
     x: 0.5, y: 2.3, w: 3.0, h: 0.35,
-    fontSize: 14, fontFace: FONT, bold: true, color: SOFT_BLUE, align: 'center',
+    fontSize: 14, fontFace: FONT_HEADING, bold: true, color: SOFT_BLUE, align: 'center',
 });
 addDivider(s5, 0.8, 2.75, 2.4, DIVIDER);
 
 s5.addText('PUBLIC API  (No Auth)', {
     x: 0.7, y: 2.9, w: 2.6, h: 0.3,
-    fontSize: 10, fontFace: FONT, bold: true, color: TEAL,
+    fontSize: 10, fontFace: FONT, bold: true, color: ACCENT,
 });
 ['Ticker Prices', 'OHLCV Candles', 'Order Book Depth'].forEach((item, i) => {
     s5.addText('\u2022  ' + item, {
@@ -326,16 +320,16 @@ s5.addText('PRIVATE API  (Key Required)', {
 });
 
 // ── Arrow 1 ──
-s5.addShape(pptx.ShapeType.rect, { x: 3.55, y: 3.7, w: 0.7, h: 0.03, fill: { type: 'solid', color: TEAL } });
-s5.addText('\u25B6', { x: 3.95, y: 3.5, w: 0.4, h: 0.4, fontSize: 14, color: TEAL, align: 'center', valign: 'middle' });
+s5.addShape(pptx.ShapeType.rect, { x: 3.55, y: 3.7, w: 0.7, h: 0.03, fill: { type: 'solid', color: ACCENT } });
+s5.addText('\u25B6', { x: 3.95, y: 3.5, w: 0.4, h: 0.4, fontSize: 14, color: ACCENT, align: 'center', valign: 'middle' });
 s5.addText('HTTPS', { x: 3.5, y: 3.95, w: 0.8, h: 0.25, fontSize: 8, fontFace: FONT, color: MID_GRAY, align: 'center' });
 
 // ── Server Box ──
-addCard(s5, 4.3, 1.5, 4.8, 4.8, { border: TEAL });
-addIcon(s5, 6.35, 1.7, 'S', TEAL, 0.5);
+addCard(s5, 4.3, 1.5, 4.8, 4.8, { border: ACCENT });
+addIcon(s5, 6.35, 1.7, 'S', ACCENT, 0.5);
 s5.addText('Node.js Server', {
     x: 4.3, y: 2.3, w: 4.8, h: 0.35,
-    fontSize: 14, fontFace: FONT, bold: true, color: TEAL, align: 'center',
+    fontSize: 14, fontFace: FONT_HEADING, bold: true, color: ACCENT, align: 'center',
 });
 addDivider(s5, 4.6, 2.75, 4.2, DIVIDER);
 
@@ -380,13 +374,13 @@ addCard(s5, 9.9, 1.5, 3.0, 4.8, { border: SOFT_GREEN });
 addIcon(s5, 11.05, 1.7, 'Br', SOFT_GREEN, 0.5);
 s5.addText('Browser', {
     x: 9.9, y: 2.3, w: 3.0, h: 0.35,
-    fontSize: 14, fontFace: FONT, bold: true, color: SOFT_GREEN, align: 'center',
+    fontSize: 14, fontFace: FONT_HEADING, bold: true, color: SOFT_GREEN, align: 'center',
 });
 addDivider(s5, 10.2, 2.75, 2.4, DIVIDER);
 
 s5.addText('LANDING PAGE', {
     x: 10.1, y: 2.9, w: 2.6, h: 0.3,
-    fontSize: 10, fontFace: FONT, bold: true, color: TEAL,
+    fontSize: 10, fontFace: FONT, bold: true, color: ACCENT,
 });
 ['Hero & Animations', 'Login / Signup Modals', 'Backtest Results'].forEach((item, i) => {
     s5.addText('\u2022  ' + item, {
@@ -400,7 +394,7 @@ s5.addText('DASHBOARD', {
     x: 10.1, y: 4.4, w: 2.6, h: 0.3,
     fontSize: 10, fontFace: FONT, bold: true, color: SOFT_GREEN,
 });
-['Live Prices (WebSocket)', 'AI Signal Cards', 'Trade Panel & History'].forEach((item, i) => {
+['Live Prices (WebSocket)', 'AI Signal Cards', 'Trade Panel & P&L'].forEach((item, i) => {
     s5.addText('\u2022  ' + item, {
         x: 10.3, y: 4.7 + i * 0.33, w: 2.2, h: 0.3,
         fontSize: 10, fontFace: FONT, color: LIGHT_GRAY,
@@ -417,7 +411,7 @@ addSlideHeader(s6, 'How It Works', 'From raw market data to executed trade in fo
 const steps = [
     { num: '01', title: 'Ingest Data',     desc: 'Pull historical and live OHLCV candle data from Kraken every 15 seconds for BTC/EUR and ETH/EUR pairs.',         color: SOFT_BLUE },
     { num: '02', title: 'AI Analysis',     desc: 'Calculate RSI, MACD, and Bollinger Bands from 720 data points. Score each indicator for bullish or bearish bias.', color: GOLD },
-    { num: '03', title: 'Generate Signal', desc: 'Output a LONG, SHORT, or HOLD signal with a confidence percentage. Store in database and broadcast via WebSocket.', color: TEAL },
+    { num: '03', title: 'Generate Signal', desc: 'Output a LONG, SHORT, or HOLD signal with a confidence percentage. Store in database and broadcast via WebSocket.', color: ACCENT },
     { num: '04', title: 'Execute Trade',   desc: 'Paper mode: simulate trade at real price. Live mode: auto-execute on Kraken with stop-loss and take-profit levels.', color: SOFT_GREEN },
 ];
 
@@ -425,21 +419,21 @@ steps.forEach((st, i) => {
     const x = 0.5 + i * 3.15;
     addCard(s6, x, 1.5, 2.85, 5.0);
 
-    // Number circle at top
+    // Number circle at top - bordered style matching website
     s6.addShape(pptx.ShapeType.ellipse, {
         x: x + 0.95, y: 1.75, w: 0.9, h: 0.9,
-        fill: { type: 'solid', color: st.color },
-        shadow: { type: 'outer', blur: 6, offset: 2, color: '000000', opacity: 0.2 },
+        fill: { type: 'solid', color: BG_DARK },
+        line: { color: st.color, width: 2 },
     });
     s6.addText(st.num, {
         x: x + 0.95, y: 1.75, w: 0.9, h: 0.9,
-        fontSize: 22, fontFace: FONT, bold: true, color: WHITE, align: 'center', valign: 'middle',
+        fontSize: 22, fontFace: FONT_HEADING, bold: true, color: st.color, align: 'center', valign: 'middle',
     });
 
     // Title
     s6.addText(st.title, {
         x: x + 0.15, y: 2.85, w: 2.55, h: 0.4,
-        fontSize: 17, fontFace: FONT, bold: true, color: st.color, align: 'center',
+        fontSize: 17, fontFace: FONT_HEADING, bold: true, color: st.color, align: 'center',
     });
 
     addDivider(s6, x + 0.3, 3.35, 2.25, DIVIDER);
@@ -467,7 +461,7 @@ s7.background = { fill: BG_DARK };
 addSlideHeader(s7, 'Core Features', 'Everything needed for intelligent crypto trading');
 
 const features = [
-    { icon: 'Nn', title: 'Neural Network Design',  desc: 'Signal engine using RSI, MACD, Bollinger Bands with weighted scoring to identify market conditions.',       color: TEAL },
+    { icon: 'Nn', title: 'Neural Network Design',  desc: 'Signal engine using RSI, MACD, Bollinger Bands with weighted scoring to identify market conditions.',       color: ACCENT },
     { icon: 'TA', title: 'Technical Analysis',      desc: 'Automated calculation of moving averages, momentum oscillators, volatility bands, and volume metrics.',     color: SOFT_GREEN },
     { icon: 'K',  title: 'Kraken Integration',      desc: 'Direct REST API connection. Public endpoints for data (free), Private endpoints for order execution.',      color: SOFT_BLUE },
     { icon: 'Rm', title: 'Risk Management',         desc: 'Stop-loss and take-profit on every trade. Position sizing based on balance. Max drawdown controls.',        color: CORAL },
@@ -489,7 +483,7 @@ features.forEach((f, i) => {
     // Title
     s7.addText(f.title, {
         x: x + 0.8, y: y + 0.15, w: 4.8, h: 0.35,
-        fontSize: 14, fontFace: FONT, bold: true, color: f.color,
+        fontSize: 14, fontFace: FONT_HEADING, bold: true, color: f.color,
     });
 
     // Divider
@@ -544,7 +538,7 @@ addDivider(s8, 1.0, 1.82, 11.3, DIVIDER);
 endpoints.forEach((ep, i) => {
     const y = 1.9 + i * 0.42;
     const methodColors = { POST: SOFT_GREEN, GET: SOFT_BLUE, WS: LAVENDER, DELETE: CORAL };
-    const mColor = methodColors[ep.method] || TEAL;
+    const mColor = methodColors[ep.method] || ACCENT;
     // Method badge
     s8.addShape(pptx.ShapeType.roundRect, {
         x: 1.0, y: y + 0.04, w: 0.7, h: 0.28,
@@ -562,14 +556,14 @@ endpoints.forEach((ep, i) => {
         x: 5.9, y: y, w: 4.2, h: 0.35,
         fontSize: 10, fontFace: FONT, color: LIGHT_GRAY, valign: 'middle',
     });
-    const accessColor = ep.auth === 'Protected' ? GOLD : TEAL;
+    const accessColor = ep.auth === 'Protected' ? GOLD : ACCENT;
     s8.addText(ep.auth, {
         x: 10.1, y: y, w: 2.2, h: 0.35,
         fontSize: 10, fontFace: FONT, color: accessColor, align: 'center', valign: 'middle',
     });
 
     if (i < endpoints.length - 1) {
-        addDivider(s8, 1.0, y + 0.38, 11.3, '2A3A4E');
+        addDivider(s8, 1.0, y + 0.38, 11.3, '1A2828');
     }
 });
 
@@ -594,7 +588,7 @@ const tables = [
         fields: 'id          INTEGER   PRIMARY KEY\npair        TEXT\ndirection   TEXT      long | short | hold\nconfidence  REAL      percentage\nprice_at_signal REAL\nrsi         REAL\nmacd        REAL\nmacd_signal REAL\nbb_upper    REAL\nbb_lower    REAL',
     },
     {
-        name: 'price_cache', color: TEAL, icon: 'Pc',
+        name: 'price_cache', color: ACCENT, icon: 'Pc',
         fields: 'id          INTEGER   PRIMARY KEY\npair        TEXT\nprice       REAL\nvolume_24h  REAL\nhigh_24h    REAL\nlow_24h     REAL\nchange_24h  REAL\nfetched_at  DATETIME',
     },
 ];
@@ -626,11 +620,11 @@ s10.background = { fill: BG_DARK };
 addSlideHeader(s10, 'Security & Configuration', 'Production-ready security controls and environment setup');
 
 // Security panel
-addCard(s10, 0.7, 1.3, 5.9, 5.7, { border: TEAL });
-addIcon(s10, 0.95, 1.5, 'Lk', TEAL, 0.4);
+addCard(s10, 0.7, 1.3, 5.9, 5.7, { border: ACCENT });
+addIcon(s10, 0.95, 1.5, 'Lk', ACCENT, 0.4);
 s10.addText('Security Controls', {
     x: 1.5, y: 1.45, w: 4.0, h: 0.4,
-    fontSize: 18, fontFace: FONT, bold: true, color: TEAL,
+    fontSize: 18, fontFace: FONT_HEADING, bold: true, color: ACCENT,
 });
 addDivider(s10, 0.95, 2.0, 5.4, DIVIDER);
 
@@ -640,7 +634,7 @@ const secItems = [
     { title: 'Route Protection',     desc: 'Bearer token middleware on all private routes', color: LAVENDER },
     { title: 'Live Trading Gate',    desc: 'Environment flag must be explicitly enabled',   color: GOLD },
     { title: 'API Key Isolation',    desc: 'Kraken credentials in .env, never sent to client', color: CORAL },
-    { title: 'Input Validation',     desc: 'Direction, quantity, and pair checks on all trades', color: TEAL },
+    { title: 'Input Validation',     desc: 'Direction, quantity, and pair checks on all trades', color: ACCENT },
     { title: 'Version Control',      desc: '.env, node_modules, and database in .gitignore',    color: MID_GRAY },
 ];
 secItems.forEach((s, i) => {
@@ -661,7 +655,7 @@ addCard(s10, 7.0, 1.3, 5.63, 5.7, { border: GOLD });
 addIcon(s10, 7.25, 1.5, 'Cf', GOLD, 0.4);
 s10.addText('Environment Config', {
     x: 7.8, y: 1.45, w: 4.0, h: 0.4,
-    fontSize: 18, fontFace: FONT, bold: true, color: GOLD,
+    fontSize: 18, fontFace: FONT_HEADING, bold: true, color: GOLD,
 });
 addDivider(s10, 7.25, 2.0, 5.1, DIVIDER);
 
@@ -671,11 +665,11 @@ s10.addText('.env', {
 });
 
 const envLines = [
-    { k: 'PORT',                v: '3000',                    c: MID_GRAY },
-    { k: 'JWT_SECRET',          v: 'your-secret-key',         c: MID_GRAY },
-    { k: 'DB_PATH',             v: './data/cryptoedge.db',    c: MID_GRAY },
+    { k: 'PORT',                v: '10000',                   c: MID_GRAY },
+    { k: 'JWT_SECRET',          v: '<auto-generated>',        c: MID_GRAY },
+    { k: 'DB_PATH',             v: '/opt/render/project/data/cryptoedge.db', c: MID_GRAY },
     { k: '',                    v: '',                         c: MID_GRAY },
-    { k: '# Kraken Public',    v: '(free, no auth)',          c: TEAL },
+    { k: '# Kraken Public',    v: '(free, no auth)',          c: ACCENT },
     { k: 'KRAKEN_API_URL',     v: 'https://api.kraken.com',  c: MID_GRAY },
     { k: '',                    v: '',                         c: MID_GRAY },
     { k: '# Kraken Private',   v: '(optional)',               c: GOLD },
@@ -711,7 +705,7 @@ addSlideHeader(s11, 'Project Structure', '18 files across a clean, modular archi
 addCard(s11, 0.7, 1.3, 6.4, 5.7);
 s11.addText('File Tree', {
     x: 1.0, y: 1.45, w: 3.0, h: 0.35,
-    fontSize: 14, fontFace: FONT, bold: true, color: WHITE,
+    fontSize: 14, fontFace: FONT_HEADING, bold: true, color: WHITE,
 });
 addDivider(s11, 1.0, 1.85, 5.8, DIVIDER);
 
@@ -720,6 +714,7 @@ s11.addText(
     '\u251C\u2500 server.js                   Entry point\n' +
     '\u251C\u2500 package.json\n' +
     '\u251C\u2500 .env                        Configuration\n' +
+    '\u251C\u2500 render.yaml                 Render deploy\n' +
     '\u251C\u2500 public/\n' +
     '\u2502   \u251C\u2500 index.html              Landing page\n' +
     '\u2502   \u2514\u2500 dashboard.html          Trading dashboard\n' +
@@ -747,15 +742,15 @@ s11.addText(
 
 // Stats cards
 addCard(s11, 7.5, 1.3, 5.13, 2.3);
-addIcon(s11, 7.75, 1.5, '#', TEAL, 0.36);
+addIcon(s11, 7.75, 1.5, '#', ACCENT, 0.36);
 s11.addText('Project Stats', {
     x: 8.2, y: 1.45, w: 3.0, h: 0.35,
-    fontSize: 14, fontFace: FONT, bold: true, color: WHITE,
+    fontSize: 14, fontFace: FONT_HEADING, bold: true, color: WHITE,
 });
 addDivider(s11, 7.75, 1.9, 4.6, DIVIDER);
 
 const pStats = [
-    { label: 'Total Source Files', value: '18',  color: TEAL },
+    { label: 'Total Source Files', value: '18',  color: ACCENT },
     { label: 'Backend Modules',    value: '12',  color: SOFT_GREEN },
     { label: 'Frontend Pages',     value: '2',   color: SOFT_BLUE },
     { label: 'API Endpoints',      value: '12',  color: GOLD },
@@ -777,7 +772,7 @@ addCard(s11, 7.5, 3.9, 5.13, 3.1, { border: SOFT_GREEN });
 addIcon(s11, 7.75, 4.1, '>', SOFT_GREEN, 0.36);
 s11.addText('Quick Start', {
     x: 8.2, y: 4.05, w: 3.0, h: 0.35,
-    fontSize: 14, fontFace: FONT, bold: true, color: SOFT_GREEN,
+    fontSize: 14, fontFace: FONT_HEADING, bold: true, color: SOFT_GREEN,
 });
 addDivider(s11, 7.75, 4.5, 4.6, DIVIDER);
 
@@ -788,8 +783,8 @@ s11.addText(
     '# Start the server\n' +
     'npm start\n' +
     '\n' +
-    '# Open in browser\n' +
-    'http://localhost:3000', {
+    '# Live production\n' +
+    'https://cryptoedge-ai.onrender.com', {
     x: 7.85, y: 4.6, w: 4.5, h: 2.2,
     fontSize: 11, fontFace: 'Courier New', color: LIGHT_GRAY, lineSpacingMultiple: 1.3,
 });
@@ -822,7 +817,7 @@ phases.forEach((p, i) => {
 
     s12.addText(p.title, {
         x, y: 1.55, w: 3.85, h: 0.35,
-        fontSize: 20, fontFace: FONT_LIGHT, color: WHITE, align: 'center',
+        fontSize: 20, fontFace: FONT_HEADING, color: WHITE, align: 'center',
     });
     s12.addText(p.subtitle, {
         x, y: 1.9, w: 3.85, h: 0.3,
@@ -856,43 +851,37 @@ phases.forEach((p, i) => {
 // ════════════════════════════════════════════════════
 let s13 = pptx.addSlide();
 s13.background = { fill: BG_DARK };
-s13.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.05, fill: { type: 'solid', color: TEAL } });
+s13.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: '100%', h: 0.05, fill: { type: 'solid', color: ACCENT } });
 
 // Center card
-addCard(s13, 2.5, 1.3, 8.33, 4.8, { border: TEAL });
+addCard(s13, 2.5, 1.3, 8.33, 4.8, { border: ACCENT });
 
-// Logo
-s13.addShape(pptx.ShapeType.roundRect, {
-    x: 5.95, y: 1.6, w: 1.43, h: 1.43,
-    fill: { type: 'solid', color: TEAL },
-    rectRadius: 0.22,
-    shadow: { type: 'outer', blur: 10, offset: 3, color: '000000', opacity: 0.3 },
-});
-s13.addText('CE', {
-    x: 5.95, y: 1.6, w: 1.43, h: 1.43,
-    fontSize: 38, fontFace: FONT, bold: true, color: WHITE, align: 'center', valign: 'middle',
+// Serif logo like the website
+s13.addText('CryptoEdge.', {
+    x: 2.5, y: 1.8, w: 8.33, h: 1.0,
+    fontSize: 48, fontFace: FONT_HEADING, color: WHITE, align: 'center',
 });
 
-s13.addText('CryptoEdge AI', {
-    x: 2.5, y: 3.2, w: 8.33, h: 0.7,
-    fontSize: 36, fontFace: FONT_LIGHT, color: WHITE, align: 'center',
+s13.addText('AI-Powered Cryptocurrency Trading Platform', {
+    x: 2.5, y: 2.9, w: 8.33, h: 0.7,
+    fontSize: 18, fontFace: FONT_HEADING, color: WHITE, align: 'center',
 });
 
 s13.addText('Trade Smarter with AI-Driven Crypto Signals', {
-    x: 2.5, y: 3.9, w: 8.33, h: 0.45,
-    fontSize: 16, fontFace: FONT, color: TEAL, align: 'center',
+    x: 2.5, y: 3.6, w: 8.33, h: 0.45,
+    fontSize: 16, fontFace: FONT, color: ACCENT, align: 'center',
 });
 
-addDivider(s13, 4.5, 4.6, 4.33, DIVIDER);
+addDivider(s13, 4.5, 4.3, 4.33, DIVIDER);
 
 s13.addText('Thank you', {
-    x: 2.5, y: 4.75, w: 8.33, h: 0.45,
-    fontSize: 14, fontFace: FONT, color: LIGHT_GRAY, align: 'center',
+    x: 2.5, y: 4.45, w: 8.33, h: 0.45,
+    fontSize: 14, fontFace: FONT_HEADING, color: LIGHT_GRAY, align: 'center',
 });
 
-s13.addText('http://localhost:3000', {
-    x: 2.5, y: 5.3, w: 8.33, h: 0.4,
-    fontSize: 15, fontFace: 'Courier New', color: TEAL, align: 'center',
+s13.addText('https://cryptoedge-ai.onrender.com', {
+    x: 2.5, y: 5.0, w: 8.33, h: 0.4,
+    fontSize: 15, fontFace: 'Courier New', color: ACCENT, align: 'center',
 });
 
 // Disclaimer at bottom

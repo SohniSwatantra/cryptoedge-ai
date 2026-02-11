@@ -1,7 +1,7 @@
 const { logError } = require('./logger');
 
 const KIMI_API_URL = process.env.KIMI_API_URL || 'https://api.moonshot.ai/v1/chat/completions';
-const KIMI_MODEL_ID = process.env.KIMI_MODEL_ID || 'kimi-k2.5-preview';
+const KIMI_MODEL_ID = process.env.KIMI_MODEL_ID || 'kimi-k2.5';
 const LLM_TIMEOUT = 15000; // 15 seconds
 
 function isLLMAvailable() {
