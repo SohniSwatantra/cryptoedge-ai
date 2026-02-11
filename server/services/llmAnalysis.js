@@ -244,7 +244,7 @@ async function analyzeMarket(pair, marketData) {
         return result;
     } catch (err) {
         if (err.name === 'AbortError') {
-            throw new Error('Request timeout after 15s');
+            throw new Error(`LLM request timeout after ${LLM_TIMEOUT / 1000}s`);
         }
         throw err;
     } finally {
