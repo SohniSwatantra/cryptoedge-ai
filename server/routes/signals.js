@@ -1,5 +1,5 @@
 const express = require('express');
-const { getLatestSignals, getSignalHistory } = require('../services/signals');
+const { getLatestSignals, getSignalHistory, refreshSignals } = require('../services/signals');
 const { getRecentErrors } = require('../services/logger');
 const { authMiddleware } = require('../middleware/auth');
 
@@ -9,6 +9,17 @@ const router = express.Router();
 router.get('/latest', (req, res) => {
     const signals = getLatestSignals();
     res.json({ signals });
+});
+
+// POST /api/signals/refresh - Force fresh signal generation (auth required)
+router.post('/refresh', authMiddleware, async (req, res) => {
+    try {
+        const signals = await refreshSignals();
+        res.json({ signals });
+    } catch (err) {
+        const status = err.message.includes('in progress') ? 429 : 503;
+        res.status(status).json({ error: err.message });
+    }
 });
 
 // GET /api/signals/history/:pair - Get signal history

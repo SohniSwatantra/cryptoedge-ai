@@ -114,8 +114,10 @@ function broadcastError(wss, errorMessage) {
 }
 
 let signalInterval = null;
+let storedWss = null;
 
 function startSignalEngine(wss) {
+    storedWss = wss;
     const interval = parseInt(process.env.SIGNAL_INTERVAL) || 300000;
     console.log(`Signal engine started (interval: ${interval}ms, LLM: ${isLLMAvailable() ? 'enabled' : 'disabled'})`);
 
@@ -191,4 +193,37 @@ function getSignalHistory(pair, limit = 24) {
     });
 }
 
-module.exports = { startSignalEngine, generateAllSignals, getLatestSignals, getSignalHistory };
+/**
+ * Manual refresh: generate fresh signals now and broadcast via WebSocket.
+ * Returns the signals object or throws if LLM unavailable / already running.
+ */
+async function refreshSignals() {
+    if (!isLLMAvailable()) {
+        throw new Error('Signal analysis unavailable: LLM not configured');
+    }
+    if (isRunning) {
+        throw new Error('Signal generation already in progress');
+    }
+
+    isRunning = true;
+    try {
+        const signals = await generateAllSignals();
+        const hasSignals = Object.values(signals).some(s => s !== null);
+
+        if (hasSignals && storedWss) {
+            const msg = JSON.stringify({ type: 'signals', data: signals });
+            storedWss.clients.forEach(client => {
+                if (client.readyState === 1) client.send(msg);
+            });
+        }
+
+        if (!hasSignals) throw new Error('All signal generations failed');
+
+        console.log('Signals refreshed (manual):', Object.entries(signals).map(([p, s]) => s ? `${p}: ${s.direction} (${s.confidence}%)` : `${p}: failed`).join(', '));
+        return signals;
+    } finally {
+        isRunning = false;
+    }
+}
+
+module.exports = { startSignalEngine, generateAllSignals, refreshSignals, getLatestSignals, getSignalHistory };

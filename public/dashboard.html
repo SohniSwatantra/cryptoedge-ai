@@ -394,12 +394,53 @@
         .ws-dot.connected { background: var(--accent-green); animation: pulse 2s infinite; }
         @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
 
+        /* Analytics */
+        .analytics-section { margin-bottom: 24px; }
+        .analytics-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+        .analytics-row { display: flex; gap: 16px; margin-bottom: 16px; }
+        .analytics-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+        .analytics-card h4 { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .analytics-card-sm { width: 220px; flex-shrink: 0; }
+        .analytics-card-md { flex: 1; min-width: 0; }
+        .analytics-card-lg { flex: 1; min-width: 0; }
+        .donut-wrap { position: relative; width: 140px; height: 140px; margin: 0 auto; }
+        .donut-wrap canvas { display: block; }
+        .donut-center {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .donut-center .donut-pct { font-size: 28px; font-weight: 400; font-family: Georgia, 'Times New Roman', serif; color: var(--text-primary); }
+        .donut-center .donut-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; }
+        .streak-dots { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .streak-dot {
+            width: 24px; height: 24px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 700; color: #0c1616;
+        }
+        .streak-dot.win { background: var(--accent-green); }
+        .streak-dot.loss { background: var(--accent-red); }
+        .streak-dot.even { background: var(--text-secondary); }
+        .streak-info { text-align: center; margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+        .streak-info strong { color: var(--text-primary); }
+        .analytics-empty {
+            text-align: center; padding: 48px 24px; color: var(--text-secondary); font-size: 14px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+        }
+
         @media (max-width: 768px) {
             .dashboard { padding: 16px; }
             .topbar { padding: 12px 16px; }
             .section-grid { grid-template-columns: 1fr; }
             .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
             .form-row { flex-direction: column; }
+            .analytics-row { flex-direction: column; }
+            .analytics-card-sm { width: 100%; }
         }
     </style>
 </head>
@@ -472,7 +513,10 @@
             <div class="section">
                 <div class="section-header">
                     <h3>AI Signals (Live)</h3>
-                    <span style="font-size:12px;color:var(--text-secondary);" id="signalTime">-</span>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <button class="btn-sm" id="refreshSignalsBtn" onclick="manualRefreshSignals()" style="background:transparent;border:1px solid var(--border);color:var(--text-secondary);border-radius:100px;padding:5px 12px;font-size:12px;cursor:pointer;" title="Generate fresh signals now">&#x21bb; Refresh</button>
+                        <span style="font-size:12px;color:var(--text-secondary);" id="signalTime">-</span>
+                    </div>
                 </div>
                 <div id="signalsList">
                     <div class="empty-state">Waiting for signals...</div>
@@ -532,6 +576,50 @@
             </div>
             <div id="historyContainer">
                 <div class="empty-state">No closed trades yet.</div>
+            </div>
+        </div>
+
+        <!-- Performance Analytics -->
+        <div class="analytics-section" id="analyticsSection">
+            <h3>Performance Analytics</h3>
+            <div id="analyticsEmpty" class="analytics-empty" style="display:none;">
+                Complete some trades to see your performance analytics.
+            </div>
+            <div id="analyticsContent" style="display:none;">
+                <div class="analytics-row">
+                    <div class="analytics-card analytics-card-sm">
+                        <h4>Win Rate</h4>
+                        <div class="donut-wrap">
+                            <canvas id="donutCanvas" width="140" height="140"></canvas>
+                            <div class="donut-center">
+                                <div class="donut-pct" id="donutPct">-</div>
+                                <div class="donut-label">Win Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="analytics-card analytics-card-sm">
+                        <h4>Recent Streak</h4>
+                        <div id="streakContainer"></div>
+                    </div>
+                    <div class="analytics-card analytics-card-lg">
+                        <h4>Cumulative P&amp;L</h4>
+                        <canvas id="pnlCanvas" height="180"></canvas>
+                    </div>
+                </div>
+                <div class="analytics-row">
+                    <div class="analytics-card analytics-card-md">
+                        <h4>Win Rate by Pair</h4>
+                        <canvas id="pairCanvas" height="160"></canvas>
+                    </div>
+                    <div class="analytics-card analytics-card-md">
+                        <h4>Win Rate by Direction</h4>
+                        <canvas id="dirCanvas" height="160"></canvas>
+                    </div>
+                    <div class="analytics-card analytics-card-md">
+                        <h4>Confidence Calibration</h4>
+                        <canvas id="calibCanvas" height="160"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1037,6 +1125,30 @@
         } catch (err) { console.error('Signals error:', err); }
     }
 
+    // Manual signal refresh
+    async function manualRefreshSignals() {
+        const btn = document.getElementById('refreshSignalsBtn');
+        btn.disabled = true;
+        btn.textContent = 'Generating...';
+        btn.style.opacity = '0.5';
+        try {
+            const res = await fetch(API + '/api/signals/refresh', { method: 'POST', headers: headers() });
+            const data = await res.json();
+            if (!res.ok) {
+                showToast(data.error || 'Refresh failed', 'error');
+                return;
+            }
+            updateSignals(data.signals);
+            showToast('Signals refreshed');
+        } catch (err) {
+            showToast('Refresh failed: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '&#x21bb; Refresh';
+            btn.style.opacity = '1';
+        }
+    }
+
     // Initial ticker load from REST
     async function loadTickers() {
         try {
@@ -1047,6 +1159,326 @@
         } catch (err) { console.error('Ticker error:', err); }
     }
 
+    // ─── Analytics Charts ────────────────────────────────────────
+    let analyticsData = null;
+
+    function setupCanvas(canvas, width, height) {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        return ctx;
+    }
+
+    function drawDonutChart(donut, winRate) {
+        const canvas = document.getElementById('donutCanvas');
+        const size = 140;
+        const ctx = setupCanvas(canvas, size, size);
+        const cx = size / 2, cy = size / 2, r = 54, lineW = 14;
+        const total = donut.wins + donut.losses + donut.breakeven;
+        ctx.clearRect(0, 0, size, size);
+        if (total === 0) return;
+
+        const slices = [
+            { val: donut.wins, color: '#3ecf8e' },
+            { val: donut.breakeven, color: '#7a8a8a' },
+            { val: donut.losses, color: '#f87171' }
+        ];
+        let angle = -Math.PI / 2;
+        for (const s of slices) {
+            if (s.val === 0) continue;
+            const sweep = (s.val / total) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, angle, angle + sweep);
+            ctx.strokeStyle = s.color;
+            ctx.lineWidth = lineW;
+            ctx.lineCap = 'butt';
+            ctx.stroke();
+            angle += sweep;
+        }
+        document.getElementById('donutPct').textContent = winRate.toFixed(0) + '%';
+    }
+
+    function drawPnlChart(timeline) {
+        const canvas = document.getElementById('pnlCanvas');
+        const w = canvas.parentElement.clientWidth - 40;
+        const h = 170;
+        const ctx = setupCanvas(canvas, w, h);
+        ctx.clearRect(0, 0, w, h);
+        if (timeline.length === 0) return;
+
+        const pad = { top: 10, right: 10, bottom: 28, left: 50 };
+        const cw = w - pad.left - pad.right;
+        const ch = h - pad.top - pad.bottom;
+
+        const values = timeline.map(d => d.cumulative_pnl);
+        const minV = Math.min(0, ...values);
+        const maxV = Math.max(0, ...values);
+        const range = maxV - minV || 1;
+
+        function x(i) { return pad.left + (i / (timeline.length - 1 || 1)) * cw; }
+        function y(v) { return pad.top + ch - ((v - minV) / range) * ch; }
+
+        // Zero line
+        const zeroY = y(0);
+        ctx.strokeStyle = '#1e2e2e';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(w - pad.right, zeroY); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Area fill
+        ctx.beginPath();
+        ctx.moveTo(x(0), zeroY);
+        for (let i = 0; i < timeline.length; i++) ctx.lineTo(x(i), y(values[i]));
+        ctx.lineTo(x(timeline.length - 1), zeroY);
+        ctx.closePath();
+        const lastVal = values[values.length - 1];
+        const grad = ctx.createLinearGradient(0, pad.top, 0, h);
+        if (lastVal >= 0) { grad.addColorStop(0, 'rgba(62,207,142,0.25)'); grad.addColorStop(1, 'rgba(62,207,142,0)'); }
+        else { grad.addColorStop(0, 'rgba(248,113,113,0)'); grad.addColorStop(1, 'rgba(248,113,113,0.25)'); }
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Line
+        ctx.beginPath();
+        for (let i = 0; i < timeline.length; i++) {
+            if (i === 0) ctx.moveTo(x(i), y(values[i]));
+            else ctx.lineTo(x(i), y(values[i]));
+        }
+        ctx.strokeStyle = lastVal >= 0 ? '#3ecf8e' : '#f87171';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Date labels
+        ctx.fillStyle = '#7a8a8a';
+        ctx.font = '10px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        const step = Math.max(1, Math.floor(timeline.length / 5));
+        for (let i = 0; i < timeline.length; i += step) {
+            const d = timeline[i].date;
+            ctx.fillText(d.slice(5), x(i), h - 4);
+        }
+        // Last date always
+        if (timeline.length > 1) {
+            ctx.fillText(timeline[timeline.length - 1].date.slice(5), x(timeline.length - 1), h - 4);
+        }
+
+        // Y-axis labels
+        ctx.textAlign = 'right';
+        ctx.fillText(maxV.toFixed(0), pad.left - 6, pad.top + 10);
+        ctx.fillText(minV.toFixed(0), pad.left - 6, pad.top + ch);
+        if (minV < 0 && maxV > 0) ctx.fillText('0', pad.left - 6, zeroY + 4);
+    }
+
+    function drawPairChart(byPair) {
+        const canvas = document.getElementById('pairCanvas');
+        const pairs = Object.entries(byPair);
+        const w = canvas.parentElement.clientWidth - 40;
+        const h = 150;
+        const ctx = setupCanvas(canvas, w, h);
+        ctx.clearRect(0, 0, w, h);
+        if (pairs.length === 0) return;
+
+        const pad = { top: 5, right: 10, bottom: 5, left: 70 };
+        const cw = w - pad.left - pad.right;
+        const ch = h - pad.top - pad.bottom;
+        const barH = Math.min(28, ch / pairs.length - 6);
+        const gap = (ch - barH * pairs.length) / (pairs.length + 1);
+
+        for (let i = 0; i < pairs.length; i++) {
+            const [pair, stats] = pairs[i];
+            const yPos = pad.top + gap * (i + 1) + barH * i;
+            const barW = (stats.win_rate / 100) * cw;
+
+            // Bar
+            ctx.fillStyle = stats.win_rate >= 50 ? 'rgba(62,207,142,0.6)' : 'rgba(248,113,113,0.6)';
+            ctx.beginPath();
+            ctx.roundRect(pad.left, yPos, Math.max(barW, 2), barH, 4);
+            ctx.fill();
+
+            // Label
+            ctx.fillStyle = '#f0f0f0';
+            ctx.font = '12px -apple-system, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText(pair, pad.left - 8, yPos + barH / 2 + 4);
+
+            // Value
+            ctx.fillStyle = '#7a8a8a';
+            ctx.font = '11px -apple-system, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(stats.win_rate.toFixed(0) + '% (' + stats.wins + 'W/' + stats.losses + 'L)', pad.left + barW + 8, yPos + barH / 2 + 4);
+        }
+    }
+
+    function drawDirectionChart(byDir) {
+        const canvas = document.getElementById('dirCanvas');
+        const w = canvas.parentElement.clientWidth - 40;
+        const h = 150;
+        const ctx = setupCanvas(canvas, w, h);
+        ctx.clearRect(0, 0, w, h);
+
+        const dirs = [
+            { label: 'LONG', data: byDir.long, color: '#3ecf8e' },
+            { label: 'SHORT', data: byDir.short, color: '#f87171' }
+        ];
+        const pad = { top: 10, right: 20, bottom: 28, left: 20 };
+        const cw = w - pad.left - pad.right;
+        const ch = h - pad.top - pad.bottom;
+        const barW = Math.min(60, cw / 4);
+        const gap = (cw - barW * 2) / 3;
+
+        for (let i = 0; i < dirs.length; i++) {
+            const d = dirs[i];
+            const total = d.data.wins + d.data.losses;
+            const rate = total > 0 ? d.data.win_rate : 0;
+            const barH = (rate / 100) * ch;
+            const xPos = pad.left + gap * (i + 1) + barW * i;
+            const yPos = pad.top + ch - barH;
+
+            ctx.fillStyle = d.color + '99';
+            ctx.beginPath();
+            ctx.roundRect(xPos, yPos, barW, barH, [4, 4, 0, 0]);
+            ctx.fill();
+
+            // Value on bar
+            ctx.fillStyle = '#f0f0f0';
+            ctx.font = 'bold 14px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(rate.toFixed(0) + '%', xPos + barW / 2, yPos - 6);
+
+            // Label
+            ctx.fillStyle = '#7a8a8a';
+            ctx.font = '11px -apple-system, sans-serif';
+            ctx.fillText(d.label, xPos + barW / 2, h - 10);
+
+            // W/L count
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.fillText(d.data.wins + 'W/' + d.data.losses + 'L', xPos + barW / 2, h - 0);
+        }
+    }
+
+    function drawCalibrationChart(calibration) {
+        const canvas = document.getElementById('calibCanvas');
+        const w = canvas.parentElement.clientWidth - 40;
+        const h = 150;
+        const ctx = setupCanvas(canvas, w, h);
+        ctx.clearRect(0, 0, w, h);
+
+        const buckets = calibration.filter(b => b.trades > 0);
+        if (buckets.length === 0) {
+            ctx.fillStyle = '#7a8a8a';
+            ctx.font = '12px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Need trades with confidence data', w / 2, h / 2);
+            return;
+        }
+
+        const pad = { top: 10, right: 10, bottom: 28, left: 10 };
+        const cw = w - pad.left - pad.right;
+        const ch = h - pad.top - pad.bottom;
+        const barW = Math.min(40, cw / calibration.length - 10);
+        const gap = (cw - barW * calibration.length) / (calibration.length + 1);
+
+        for (let i = 0; i < calibration.length; i++) {
+            const b = calibration[i];
+            const barH = b.trades > 0 ? (b.win_rate / 100) * ch : 0;
+            const xPos = pad.left + gap * (i + 1) + barW * i;
+            const yPos = pad.top + ch - barH;
+
+            // Bar
+            if (b.trades > 0) {
+                ctx.fillStyle = 'rgba(167,139,250,0.5)';
+                ctx.beginPath();
+                ctx.roundRect(xPos, yPos, barW, barH, [4, 4, 0, 0]);
+                ctx.fill();
+
+                // Win rate on top
+                ctx.fillStyle = '#f0f0f0';
+                ctx.font = 'bold 11px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(b.win_rate.toFixed(0) + '%', xPos + barW / 2, yPos - 4);
+            }
+
+            // Bucket label
+            ctx.fillStyle = '#7a8a8a';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(b.bucket, xPos + barW / 2, h - 6);
+        }
+
+        // Perfect calibration reference line (diagonal)
+        ctx.strokeStyle = '#a78bfa';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        for (let i = 0; i < calibration.length; i++) {
+            const xPos = pad.left + gap * (i + 1) + barW * i + barW / 2;
+            const expectedH = (calibration[i].expected_midpoint / 100) * ch;
+            const yPos = pad.top + ch - expectedH;
+            if (i === 0) ctx.moveTo(xPos, yPos);
+            else ctx.lineTo(xPos, yPos);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    function renderStreak(streak) {
+        const container = document.getElementById('streakContainer');
+        if (streak.last_10.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No trades yet</div>';
+            return;
+        }
+        let html = '<div class="streak-dots">';
+        for (const r of streak.last_10) {
+            const label = r === 'win' ? 'W' : r === 'loss' ? 'L' : 'E';
+            html += `<div class="streak-dot ${r}">${label}</div>`;
+        }
+        html += '</div>';
+        html += '<div class="streak-info">';
+        if (streak.type !== 'none') {
+            html += `Current: <strong>${streak.count} ${streak.type}${streak.count > 1 ? 's' : ''}</strong> streak`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    async function loadAnalytics() {
+        try {
+            const res = await fetch(API + '/api/portfolio/analytics', { headers: headers() });
+            const data = await res.json();
+            analyticsData = data.analytics;
+
+            if (analyticsData.total_trades === 0) {
+                document.getElementById('analyticsEmpty').style.display = 'block';
+                document.getElementById('analyticsContent').style.display = 'none';
+                return;
+            }
+            document.getElementById('analyticsEmpty').style.display = 'none';
+            document.getElementById('analyticsContent').style.display = 'block';
+
+            drawDonutChart(analyticsData.donut, analyticsData.win_rate);
+            renderStreak(analyticsData.recent_streak);
+            drawPnlChart(analyticsData.pnl_timeline);
+            drawPairChart(analyticsData.by_pair);
+            drawDirectionChart(analyticsData.by_direction);
+            drawCalibrationChart(analyticsData.confidence_calibration);
+        } catch (err) { console.error('Analytics error:', err); }
+    }
+
+    function redrawAnalytics() {
+        if (!analyticsData || analyticsData.total_trades === 0) return;
+        drawPnlChart(analyticsData.pnl_timeline);
+        drawPairChart(analyticsData.by_pair);
+        drawDirectionChart(analyticsData.by_direction);
+        drawCalibrationChart(analyticsData.confidence_calibration);
+    }
+
+    window.addEventListener('resize', redrawAnalytics);
+
     // Init
     loadUser();
     loadPortfolio();
@@ -1054,10 +1486,11 @@
     loadHistory();
     loadTickers();
     loadSignals();
+    loadAnalytics();
     connectWS();
 
     // Refresh portfolio every 30s
-    setInterval(() => { loadPortfolio(); loadPositions(); }, 30000);
+    setInterval(() => { loadPortfolio(); loadPositions(); loadAnalytics(); }, 30000);
     </script>
 </body>
 </html>
