@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0C1616"/>
+  <rect x="24" y="24" width="464" height="464" rx="80" fill="none" stroke="#1E2E2E" stroke-width="8"/>
+  <!-- Upward trending chart line -->
+  <polyline
+    points="96,380 160,340 210,360 270,280 330,300 380,200 416,160"
+    fill="none"
+    stroke="#3ECF8E"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- Glow effect on the line -->
+  <polyline
+    points="96,380 160,340 210,360 270,280 330,300 380,200 416,160"
+    fill="none"
+    stroke="#3ECF8E"
+    stroke-width="44"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    opacity="0.15"
+  />
+  <!-- End dot -->
+  <circle cx="416" cy="160" r="22" fill="#3ECF8E"/>
+  <circle cx="416" cy="160" r="34" fill="#3ECF8E" opacity="0.2"/>
+</svg>
