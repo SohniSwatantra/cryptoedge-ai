@@ -195,7 +195,7 @@ async function analyzeMarket(pair, marketData) {
                     { role: 'system', content: buildSystemPrompt() },
                     { role: 'user', content: buildUserPrompt(pair, marketData) },
                 ],
-                temperature: 0.7,
+                temperature: 1,
                 max_tokens: 4096,
             }),
             signal: controller.signal,
