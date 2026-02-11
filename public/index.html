@@ -1091,6 +1091,11 @@
     </div>
 
     <script>
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+
     // === Check if logged in - show dashboard link ===
     if (localStorage.getItem('cryptoedge_token')) {
         const getStartedBtn = document.getElementById('getStartedBtn');
