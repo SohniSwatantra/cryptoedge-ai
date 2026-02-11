@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cryptoedge-v1';
+const CACHE_NAME = 'cryptoedge-v2';
 const STATIC_ASSETS = [
     '/',
     '/dashboard',

@@ -419,6 +419,9 @@
         .hamburger.active span:nth-child(2) { opacity: 0; }
         .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(6px, -6px); }
 
+        /* PWA safe areas */
+        nav { padding-top: max(20px, env(safe-area-inset-top)); }
+
         @media (max-width: 768px) {
             .hamburger { display: flex; }
             .nav-links {
@@ -437,54 +440,62 @@
             }
             .nav-links.open { right: 0; }
             .nav-links a { font-size: 18px; }
-            nav { padding: 16px 24px; }
+            nav { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
 
-            /* Hero responsive */
             .hero {
                 flex-direction: column;
-                padding: 120px 24px 60px;
-                gap: 40px;
+                padding: 100px 20px 48px;
+                gap: 32px;
                 text-align: center;
             }
             .hero p { margin-left: auto; margin-right: auto; }
-            .hero-buttons { justify-content: center; flex-wrap: wrap; }
-            h1 { font-size: 34px; }
-            .hero p { font-size: 16px; }
+            .hero-buttons { justify-content: center; flex-wrap: wrap; gap: 10px; }
+            .hero-buttons .btn-primary,
+            .hero-buttons .btn-secondary { width: 100%; text-align: center; }
+            h1 { font-size: 28px; line-height: 1.2; }
+            .hero p { font-size: 15px; }
 
-            /* Stats responsive */
             .stats {
                 flex-wrap: wrap;
-                padding: 24px;
-                gap: 16px;
+                padding: 20px 16px;
+                gap: 12px;
             }
-            .stat-card { flex: 1 1 calc(50% - 16px); min-width: 140px; }
-            .stat-value { font-size: 28px; }
+            .stat-card { flex: 1 1 calc(50% - 12px); min-width: 130px; }
+            .stat-value { font-size: 24px; }
+            .stat-card .lbl { font-size: 11px; }
 
-            /* Features responsive */
-            .features { padding: 60px 24px; }
-            .features-grid { grid-template-columns: 1fr; gap: 16px; }
-            .section-title { font-size: 28px; }
-            .section-sub { font-size: 15px; }
+            .features { padding: 48px 20px; }
+            .features-grid { grid-template-columns: 1fr; gap: 14px; }
+            .feature-card { padding: 24px; }
+            .section-title { font-size: 24px; }
+            .section-sub { font-size: 14px; }
 
-            /* Steps responsive */
-            .how-it-works { padding: 60px 24px; }
-            .steps { flex-direction: column; gap: 24px; }
+            .how-it-works { padding: 48px 20px; }
+            .steps { flex-direction: column; gap: 20px; }
             .step-arrow { display: none; }
 
-            /* Exchanges responsive */
-            .supported { padding: 40px 24px; }
-            .exchange-cards { flex-direction: column; align-items: center; }
-            .exchange-card { width: 100%; max-width: 300px; }
+            .supported { padding: 36px 20px; }
+            .exchange-cards { flex-direction: column; align-items: center; gap: 12px; }
+            .exchange-card { width: 100%; max-width: 100%; }
 
-            /* CTA responsive */
-            .cta { padding: 40px 24px; }
-            .cta-box { padding: 36px 24px; }
-            .cta-box h2 { font-size: 24px; }
-            .cta-buttons { flex-direction: column; align-items: center; }
+            .cta { padding: 36px 20px; }
+            .cta-box { padding: 32px 20px; }
+            .cta-box h2 { font-size: 22px; }
+            .cta-buttons { flex-direction: column; align-items: stretch; }
+            .cta-buttons .btn-primary,
+            .cta-buttons .btn-secondary { width: 100%; text-align: center; }
 
-            /* Footer responsive */
-            footer { flex-direction: column; gap: 16px; text-align: center; padding: 30px 24px; }
-            .disclaimer { padding: 20px 24px; }
+            footer { flex-direction: column; gap: 12px; text-align: center; padding: 24px 20px; }
+            .disclaimer { padding: 16px 20px; font-size: 11px; }
+
+            .modal { width: 95vw; max-width: 95vw; padding: 28px 20px; }
+        }
+
+        @media (max-width: 380px) {
+            h1 { font-size: 24px; }
+            .stat-card { flex: 1 1 100%; }
+            .stat-value { font-size: 22px; }
+            .hero { padding: 90px 16px 40px; }
         }
 
         /* Modals */
@@ -615,10 +626,13 @@
         .bt-summary-card .val { font-size: 28px; font-weight: 400; margin-bottom: 4px; font-family: Georgia, 'Times New Roman', serif; }
         .bt-summary-card .lbl { font-size: 13px; color: var(--text-secondary); }
 
+        .backtest-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; }
         @media (max-width: 768px) {
-            .backtests { padding: 60px 24px; }
-            .backtest-table { font-size: 12px; }
-            .backtest-table th, .backtest-table td { padding: 10px 12px; }
+            .backtests { padding: 48px 20px; }
+            .backtest-table { font-size: 12px; min-width: 540px; }
+            .backtest-table th, .backtest-table td { padding: 10px 10px; white-space: nowrap; }
+            .backtest-summary { flex-wrap: wrap; padding: 16px; gap: 10px; }
+            .backtest-summary > div { flex: 1 1 calc(50% - 10px); min-width: 120px; }
         }
 
         /* Multi-Step Form */
@@ -887,7 +901,7 @@
                 <div class="lbl">Total Trades</div>
             </div>
         </div>
-        <table class="backtest-table">
+        <div class="backtest-scroll"><table class="backtest-table">
             <thead>
                 <tr>
                     <th>Month</th>
@@ -912,7 +926,7 @@
                 <tr><td>Mar 2024</td><td class="positive">+4.1%</td><td>14</td><td>85.7%</td><td>-3.0%</td><td class="positive">+3.8%</td></tr>
                 <tr><td>Feb 2024</td><td class="negative">-0.3%</td><td>14</td><td>78.6%</td><td>-4.6%</td><td class="negative">-0.3%</td></tr>
             </tbody>
-        </table>
+        </table></div>
     </div>
 
     <!-- CTA -->
