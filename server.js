@@ -34,6 +34,12 @@ app.use('/api/portfolio', require('./server/routes/portfolio'));
 app.use('/api/signals', require('./server/routes/signals'));
 app.use('/api/kraken', require('./server/routes/krakenLive'));
 
+// Debug: recent errors (helps diagnose signal failures on deployed instance)
+const { getRecentErrors } = require('./server/services/logger');
+app.get('/api/debug/errors', (req, res) => {
+    res.json({ errors: getRecentErrors(20) });
+});
+
 // Dashboard route
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));

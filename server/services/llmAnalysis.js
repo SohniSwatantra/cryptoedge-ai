@@ -2,7 +2,7 @@ const { logError } = require('./logger');
 
 const KIMI_API_URL = process.env.KIMI_API_URL || 'https://api.moonshot.ai/v1/chat/completions';
 const KIMI_MODEL_ID = process.env.KIMI_MODEL_ID || 'kimi-k2.5';
-const LLM_TIMEOUT = 15000; // 15 seconds
+const LLM_TIMEOUT = parseInt(process.env.LLM_TIMEOUT) || 60000; // 60 seconds (K2.5 thinking mode needs time)
 
 function isLLMAvailable() {
     if (process.env.LLM_SIGNAL_ENABLED === 'false') return false;
@@ -195,20 +195,21 @@ async function analyzeMarket(pair, marketData) {
                     { role: 'system', content: buildSystemPrompt() },
                     { role: 'user', content: buildUserPrompt(pair, marketData) },
                 ],
-                temperature: 0.6,
-                max_tokens: 800,
-                response_format: { type: 'json_object' },
+                temperature: 0.7,
+                max_tokens: 4096,
             }),
             signal: controller.signal,
         });
 
         if (!response.ok) {
             const errorBody = await response.text().catch(() => '');
+            logError('LLM_API', `${response.status} from ${KIMI_API_URL} model=${KIMI_MODEL_ID}: ${errorBody.slice(0, 300)}`);
             throw new Error(`API ${response.status}: ${errorBody.slice(0, 200)}`);
         }
 
         const data = await response.json();
 
+        // Kimi K2.5 thinking mode: actual content may be in the last choice
         const content = data.choices?.[0]?.message?.content;
         if (!content) {
             throw new Error('Empty response from LLM');
