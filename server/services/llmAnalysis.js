@@ -23,10 +23,10 @@ Analysis framework (in priority order):
 7. KEY LEVELS: Distance from support/resistance and VWAP influences entry quality.
 
 Scoring rules:
-- Need 3+ confirming factors for a directional signal
-- Volume must confirm (volume ratio > 1.0)
+- Need 2+ confirming factors for a directional signal (3+ for high confidence >70)
+- Volume confirmation (volume ratio > 1.0) boosts confidence but is not required
 - Never give confidence > 85 unless 5+ factors align
-- Hold if signals conflict or ADX < 15
+- Only hold if indicators across ALL categories genuinely conflict. Low-confidence directional (35-50%) is preferred over hold when there is any lean.
 
 IMPORTANT: Use your past trading performance data below (if available) to calibrate your signals. Favor patterns that historically won, avoid patterns that historically lost. Adjust confidence based on actual track record, not just current indicators.
 
