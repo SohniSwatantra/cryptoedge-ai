@@ -1,5 +1,6 @@
 const { getDB } = require('../db/init');
 const { getTicker } = require('./kraken');
+const { rebuildLearnings } = require('./agentLearning');
 
 async function getCurrentPrice(pair) {
     const tickers = await getTicker([pair]);
@@ -56,6 +57,9 @@ async function closePosition(userId, tradeId) {
     `).run(currentPrice, pnl, tradeId);
 
     db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(returnAmount, userId);
+
+    // Rebuild agent learning from updated trade history
+    try { rebuildLearnings(); } catch (err) { console.error('Learning rebuild failed:', err.message); }
 
     return {
         id: tradeId,

@@ -1,4 +1,5 @@
 const { logError } = require('./logger');
+const { getLearningContext } = require('./agentLearning');
 
 const KIMI_API_URL = process.env.KIMI_API_URL || 'https://api.moonshot.ai/v1/chat/completions';
 const KIMI_MODEL_ID = process.env.KIMI_MODEL_ID || 'kimi-k2.5';
@@ -26,6 +27,8 @@ Scoring rules:
 - Volume must confirm (volume ratio > 1.0)
 - Never give confidence > 85 unless 5+ factors align
 - Hold if signals conflict or ADX < 15
+
+IMPORTANT: Use your past trading performance data below (if available) to calibrate your signals. Favor patterns that historically won, avoid patterns that historically lost. Adjust confidence based on actual track record, not just current indicators.
 
 You MUST respond with ONLY valid JSON (no markdown, no explanation outside the JSON). Use this exact structure:
 {
@@ -135,6 +138,28 @@ function buildUserPrompt(pair, marketData) {
     return sections.join('\n\n');
 }
 
+function buildMessages(pair, marketData) {
+    const messages = [
+        { role: 'system', content: buildSystemPrompt() },
+    ];
+
+    // Inject learning context if available
+    const learning = getLearningContext();
+    if (learning && learning.length > 50) {
+        messages.push({
+            role: 'user',
+            content: `=== YOUR PAST TRADING PERFORMANCE ===\n${learning}\n\nUse this track record to calibrate your signal. Now analyze the current market data below.`,
+        });
+        messages.push({
+            role: 'assistant',
+            content: 'Understood. I will factor in my past performance data when generating this signal.',
+        });
+    }
+
+    messages.push({ role: 'user', content: buildUserPrompt(pair, marketData) });
+    return messages;
+}
+
 function parseResponse(raw) {
     let text = raw.trim();
 
@@ -191,10 +216,7 @@ async function analyzeMarket(pair, marketData) {
             },
             body: JSON.stringify({
                 model: KIMI_MODEL_ID,
-                messages: [
-                    { role: 'system', content: buildSystemPrompt() },
-                    { role: 'user', content: buildUserPrompt(pair, marketData) },
-                ],
+                messages: buildMessages(pair, marketData),
                 temperature: 1,
                 max_tokens: 4096,
             }),

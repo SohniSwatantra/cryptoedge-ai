@@ -40,6 +40,17 @@ app.get('/api/debug/errors', (req, res) => {
     res.json({ errors: getRecentErrors(20) });
 });
 
+// Debug: view agent learning file
+const { getLearningContext, rebuildLearnings } = require('./server/services/agentLearning');
+app.get('/api/debug/learning', (req, res) => {
+    const content = getLearningContext() || 'No learning data yet.';
+    res.type('text/plain').send(content);
+});
+app.post('/api/debug/learning/rebuild', (req, res) => {
+    const content = rebuildLearnings();
+    res.type('text/plain').send(content);
+});
+
 // Dashboard route
 app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
