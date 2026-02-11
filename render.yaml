@@ -17,7 +17,15 @@ services:
       - key: LIVE_TRADING_ENABLED
         value: "false"
       - key: SIGNAL_INTERVAL
-        value: "60000"
+        value: "300000"
+      - key: KIMI_API_KEY
+        sync: false
+      - key: KIMI_API_URL
+        value: https://api.moonshot.ai/v1/chat/completions
+      - key: KIMI_MODEL_ID
+        value: kimi-k2.5-preview
+      - key: LLM_SIGNAL_ENABLED
+        value: "true"
     disk:
       name: cryptoedge-data
       mountPath: /opt/render/project/data

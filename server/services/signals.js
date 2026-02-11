@@ -1,95 +1,89 @@
-const { getOHLCV, getTicker } = require('./kraken');
-const { rsi, macd, bollingerBands } = require('./indicators');
+const { getOHLCV, getTicker, getOrderBook } = require('./kraken');
+const { computeAllIndicators } = require('./indicators');
+const { analyzeMarket, isLLMAvailable } = require('./llmAnalysis');
+const { logError } = require('./logger');
 const { getDB } = require('../db/init');
 
 const PAIRS = ['BTC/EUR', 'ETH/EUR'];
 
+let isRunning = false; // Dedup guard
+
 async function generateSignal(pair) {
-    const candles = await getOHLCV(pair, 60); // 1h candles
-    if (candles.length < 30) return null;
+    // Fetch all market data in parallel
+    const [candles, tickerData, orderBook] = await Promise.all([
+        getOHLCV(pair, 60),
+        getTicker([pair]).then(t => t[pair]),
+        getOrderBook(pair, 10),
+    ]);
 
-    const closes = candles.map(c => c.close);
-    const currentPrice = closes[closes.length - 1];
-
-    // Calculate indicators
-    const rsiValues = rsi(closes, 14);
-    const currentRSI = rsiValues[rsiValues.length - 1];
-
-    const macdResult = macd(closes, 12, 26, 9);
-    const currentMACD = macdResult.macdLine[macdResult.macdLine.length - 1];
-    const currentMACDSignal = macdResult.signalLine[macdResult.signalLine.length - 1];
-
-    const bb = bollingerBands(closes, 20, 2);
-    const bbUpper = bb.upper[bb.upper.length - 1];
-    const bbLower = bb.lower[bb.lower.length - 1];
-
-    // Signal scoring
-    let score = 0;
-    const signals = [];
-
-    // RSI signals
-    if (currentRSI !== null) {
-        if (currentRSI < 30) { score += 2; signals.push('RSI oversold'); }
-        else if (currentRSI < 40) { score += 1; signals.push('RSI low'); }
-        else if (currentRSI > 70) { score -= 2; signals.push('RSI overbought'); }
-        else if (currentRSI > 60) { score -= 1; signals.push('RSI high'); }
+    if (candles.length < 30) {
+        throw new Error(`Insufficient candle data for ${pair}: ${candles.length} candles`);
     }
 
-    // MACD signals
-    if (currentMACD !== null && currentMACDSignal !== null) {
-        if (currentMACD > currentMACDSignal) { score += 1.5; signals.push('MACD bullish'); }
-        else { score -= 1.5; signals.push('MACD bearish'); }
-        // MACD crossover
-        const prevMACD = macdResult.macdLine[macdResult.macdLine.length - 2];
-        const prevSignal = macdResult.signalLine[macdResult.signalLine.length - 2];
-        if (prevMACD !== null && prevSignal !== null) {
-            if (prevMACD < prevSignal && currentMACD > currentMACDSignal) { score += 2; signals.push('MACD bullish cross'); }
-            if (prevMACD > prevSignal && currentMACD < currentMACDSignal) { score -= 2; signals.push('MACD bearish cross'); }
-        }
-    }
+    // Compute all indicators
+    const indicators = computeAllIndicators(candles);
 
-    // Bollinger Band signals
-    if (bbUpper !== null && bbLower !== null) {
-        const bbWidth = bbUpper - bbLower;
-        const bbPosition = (currentPrice - bbLower) / bbWidth;
-        if (bbPosition < 0.1) { score += 2; signals.push('Near BB lower'); }
-        else if (bbPosition < 0.3) { score += 1; signals.push('Below BB middle'); }
-        else if (bbPosition > 0.9) { score -= 2; signals.push('Near BB upper'); }
-        else if (bbPosition > 0.7) { score -= 1; signals.push('Above BB middle'); }
-    }
+    // Build market data package for LLM
+    const marketData = { ticker: tickerData, indicators, orderBook };
 
-    // Determine direction and confidence
-    let direction, confidence;
-    const absScore = Math.abs(score);
-
-    if (absScore < 1.5) {
-        direction = 'hold';
-        confidence = 30 + Math.random() * 20;
-    } else if (score > 0) {
-        direction = 'long';
-        confidence = Math.min(95, 55 + absScore * 6 + Math.random() * 10);
-    } else {
-        direction = 'short';
-        confidence = Math.min(95, 55 + absScore * 6 + Math.random() * 10);
-    }
-
-    confidence = parseFloat(confidence.toFixed(1));
+    // Call LLM
+    const analysis = await analyzeMarket(pair, marketData);
 
     // Store in database
     const db = getDB();
     const result = db.prepare(`
-        INSERT INTO signals (pair, direction, confidence, price_at_signal, rsi, macd, macd_signal, bb_upper, bb_lower)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(pair, direction, confidence, currentPrice, currentRSI, currentMACD, currentMACDSignal, bbUpper, bbLower);
+        INSERT INTO signals (
+            pair, direction, confidence, price_at_signal,
+            rsi, macd, macd_signal, bb_upper, bb_lower,
+            analysis_text, market_sentiment, key_factors, risk_level,
+            suggested_entry, suggested_stop_loss, suggested_take_profit,
+            model_version, analysis_source, token_usage
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+        pair,
+        analysis.direction,
+        analysis.confidence,
+        indicators.price,
+        indicators.rsi,
+        indicators.macd?.line,
+        indicators.macd?.signal,
+        indicators.bollingerBands?.upper,
+        indicators.bollingerBands?.lower,
+        analysis.analysis,
+        analysis.market_sentiment,
+        JSON.stringify(analysis.key_factors),
+        analysis.risk_level,
+        analysis.suggested_entry,
+        analysis.suggested_stop_loss,
+        analysis.suggested_take_profit,
+        analysis.model_version,
+        'llm',
+        analysis.token_usage
+    );
 
     return {
         id: result.lastInsertRowid,
         pair,
-        direction,
-        confidence,
-        price: currentPrice,
-        indicators: { rsi: currentRSI?.toFixed(1), macd: currentMACD?.toFixed(4), bb_upper: bbUpper?.toFixed(2), bb_lower: bbLower?.toFixed(2) },
-        reasons: signals,
+        direction: analysis.direction,
+        confidence: analysis.confidence,
+        price: indicators.price,
+        price_at_signal: indicators.price,
+        indicators: {
+            rsi: indicators.rsi?.toFixed(1),
+            macd: indicators.macd?.line?.toFixed(4),
+            bb_upper: indicators.bollingerBands?.upper?.toFixed(2),
+            bb_lower: indicators.bollingerBands?.lower?.toFixed(2),
+        },
+        analysis_text: analysis.analysis,
+        market_sentiment: analysis.market_sentiment,
+        key_factors: analysis.key_factors,
+        risk_level: analysis.risk_level,
+        suggested_entry: analysis.suggested_entry,
+        suggested_stop_loss: analysis.suggested_stop_loss,
+        suggested_take_profit: analysis.suggested_take_profit,
+        model_version: analysis.model_version,
+        analysis_source: 'llm',
+        technical_summary: analysis.technical_summary,
     };
 }
 
@@ -99,32 +93,72 @@ async function generateAllSignals() {
         try {
             results[pair] = await generateSignal(pair);
         } catch (err) {
-            console.error(`Signal generation failed for ${pair}:`, err.message);
+            logError('SIGNAL_ERROR', `${pair}: ${err.message}`);
             results[pair] = null;
         }
     }
     return results;
 }
 
+function broadcastError(wss, errorMessage) {
+    if (!wss) return;
+    // Never expose internal details to frontend
+    const msg = JSON.stringify({
+        type: 'signals',
+        error: errorMessage,
+        data: null,
+    });
+    wss.clients.forEach(client => {
+        if (client.readyState === 1) client.send(msg);
+    });
+}
+
 let signalInterval = null;
 
 function startSignalEngine(wss) {
-    const interval = parseInt(process.env.SIGNAL_INTERVAL) || 60000;
-    console.log(`Signal engine started (interval: ${interval}ms)`);
+    const interval = parseInt(process.env.SIGNAL_INTERVAL) || 300000;
+    console.log(`Signal engine started (interval: ${interval}ms, LLM: ${isLLMAvailable() ? 'enabled' : 'disabled'})`);
 
     async function run() {
+        // Check LLM availability
+        if (!isLLMAvailable()) {
+            if (!process.env.KIMI_API_KEY) {
+                logError('SIGNAL_ERROR', 'KIMI_API_KEY not configured');
+            }
+            broadcastError(wss, 'Signal analysis temporarily unavailable');
+            return;
+        }
+
+        // Dedup guard
+        if (isRunning) {
+            console.log('Signal generation skipped: previous run still active');
+            return;
+        }
+
+        isRunning = true;
         try {
             const signals = await generateAllSignals();
-            // Broadcast to WebSocket clients
-            if (wss) {
-                const msg = JSON.stringify({ type: 'signals', data: signals });
-                wss.clients.forEach(client => {
-                    if (client.readyState === 1) client.send(msg);
-                });
+
+            // Check if any signals succeeded
+            const hasSignals = Object.values(signals).some(s => s !== null);
+
+            if (hasSignals) {
+                // Broadcast successful signals
+                if (wss) {
+                    const msg = JSON.stringify({ type: 'signals', data: signals });
+                    wss.clients.forEach(client => {
+                        if (client.readyState === 1) client.send(msg);
+                    });
+                }
+                console.log('Signals generated:', Object.entries(signals).map(([p, s]) => s ? `${p}: ${s.direction} (${s.confidence}%)` : `${p}: failed`).join(', '));
+            } else {
+                broadcastError(wss, 'Signal analysis temporarily unavailable');
             }
-            console.log('Signals generated:', Object.entries(signals).map(([p, s]) => s ? `${p}: ${s.direction} (${s.confidence}%)` : `${p}: failed`).join(', '));
         } catch (err) {
-            console.error('Signal engine error:', err.message);
+            logError('SIGNAL_ERROR', `Engine error: ${err.message}`);
+            broadcastError(wss, 'Signal analysis temporarily unavailable');
+        } finally {
+            isRunning = false;
         }
     }
 
@@ -138,13 +172,23 @@ function getLatestSignals() {
     const signals = {};
     for (const pair of PAIRS) {
         signals[pair] = db.prepare('SELECT * FROM signals WHERE pair = ? ORDER BY created_at DESC LIMIT 1').get(pair);
+        // Parse key_factors JSON if present
+        if (signals[pair]?.key_factors) {
+            try { signals[pair].key_factors = JSON.parse(signals[pair].key_factors); } catch {}
+        }
     }
     return signals;
 }
 
 function getSignalHistory(pair, limit = 24) {
     const db = getDB();
-    return db.prepare('SELECT * FROM signals WHERE pair = ? ORDER BY created_at DESC LIMIT ?').all(pair, limit);
+    const rows = db.prepare('SELECT * FROM signals WHERE pair = ? ORDER BY created_at DESC LIMIT ?').all(pair, limit);
+    return rows.map(row => {
+        if (row.key_factors) {
+            try { row.key_factors = JSON.parse(row.key_factors); } catch {}
+        }
+        return row;
+    });
 }
 
 module.exports = { startSignalEngine, generateAllSignals, getLatestSignals, getSignalHistory };

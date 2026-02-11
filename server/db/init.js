@@ -81,6 +81,35 @@ function initDB() {
     `);
 
     console.log('Database initialized');
+
+    // Run migrations for new LLM signal columns
+    migrateDB(db);
+}
+
+function migrateDB(db) {
+    const migrations = [
+        'ALTER TABLE signals ADD COLUMN analysis_text TEXT',
+        'ALTER TABLE signals ADD COLUMN market_sentiment TEXT',
+        'ALTER TABLE signals ADD COLUMN key_factors TEXT',
+        'ALTER TABLE signals ADD COLUMN risk_level TEXT',
+        'ALTER TABLE signals ADD COLUMN suggested_entry REAL',
+        'ALTER TABLE signals ADD COLUMN suggested_stop_loss REAL',
+        'ALTER TABLE signals ADD COLUMN suggested_take_profit REAL',
+        'ALTER TABLE signals ADD COLUMN model_version TEXT',
+        "ALTER TABLE signals ADD COLUMN analysis_source TEXT DEFAULT 'legacy'",
+        'ALTER TABLE signals ADD COLUMN token_usage INTEGER',
+    ];
+
+    for (const sql of migrations) {
+        try {
+            db.exec(sql);
+        } catch (err) {
+            // Column already exists — safe to ignore
+            if (!err.message.includes('duplicate column')) {
+                console.error('Migration warning:', err.message);
+            }
+        }
+    }
 }
 
 module.exports = { getDB, initDB };

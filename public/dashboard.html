@@ -258,6 +258,97 @@
 
         .empty-state { text-align: center; padding: 32px; color: var(--text-secondary); font-size: 14px; }
 
+        /* LLM Signal Analysis Styles */
+        .signal-analysis {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+        .signal-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .signal-sentiment {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .sentiment-bullish { background: rgba(62,207,142,0.15); color: var(--accent-green); }
+        .sentiment-bearish { background: rgba(248,113,113,0.15); color: var(--accent-red); }
+        .sentiment-neutral { background: rgba(148,163,184,0.15); color: var(--text-secondary); }
+        .risk-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .risk-low { background: rgba(62,207,142,0.1); color: var(--accent-green); }
+        .risk-medium { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .risk-high { background: rgba(248,113,113,0.1); color: var(--accent-red); }
+        .ai-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            background: rgba(167,139,250,0.15);
+            color: var(--accent-purple);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .signal-factors {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .signal-factor-tag {
+            padding: 3px 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        .signal-levels {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .signal-level-item {
+            text-align: center;
+            padding: 6px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+        .signal-level-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .signal-level-value {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .signal-error {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -688,20 +779,84 @@
         const html = Object.entries(signals).map(([pair, s]) => {
             if (!s) return '';
             const badgeClass = s.direction === 'long' ? 'badge-long' : s.direction === 'short' ? 'badge-short' : 'badge-hold';
-            return `<div class="signal-card">
+            const isLLM = s.analysis_source === 'llm';
+
+            let card = `<div class="signal-card">
                 <div class="signal-top">
                     <span class="signal-pair">${s.pair}</span>
                     <span class="signal-badge ${badgeClass}">${s.direction} ${s.confidence}%</span>
                 </div>
-                <div class="signal-confidence">Price at signal: ${fmt(s.price_at_signal || s.price)}</div>
-                ${s.indicators || s.rsi ? `<div class="signal-indicators">
-                    ${s.rsi ? `<span>RSI: ${parseFloat(s.rsi).toFixed(1)}</span>` : ''}
-                    ${s.macd ? `<span>MACD: ${parseFloat(s.macd).toFixed(4)}</span>` : ''}
-                </div>` : ''}
-            </div>`;
+                <div class="signal-confidence">Price at signal: ${fmt(s.price_at_signal || s.price)}</div>`;
+
+            if (isLLM) {
+                // Meta badges: sentiment + risk + AI badge
+                card += `<div class="signal-meta">`;
+                if (s.market_sentiment) {
+                    card += `<span class="signal-sentiment sentiment-${s.market_sentiment}">${s.market_sentiment}</span>`;
+                }
+                if (s.risk_level) {
+                    card += `<span class="risk-badge risk-${s.risk_level}">Risk: ${s.risk_level}</span>`;
+                }
+                card += `<span class="ai-badge">AI Analysis</span>`;
+                card += `</div>`;
+
+                // Analysis text
+                if (s.analysis_text) {
+                    card += `<div class="signal-analysis">${escapeHtml(s.analysis_text)}</div>`;
+                }
+
+                // Key factors
+                const factors = Array.isArray(s.key_factors) ? s.key_factors : [];
+                if (factors.length > 0) {
+                    card += `<div class="signal-factors">`;
+                    factors.forEach(f => { card += `<span class="signal-factor-tag">${escapeHtml(f)}</span>`; });
+                    card += `</div>`;
+                }
+
+                // Price levels
+                if (s.suggested_entry || s.suggested_stop_loss || s.suggested_take_profit) {
+                    card += `<div class="signal-levels">`;
+                    if (s.suggested_entry) {
+                        card += `<div class="signal-level-item"><div class="signal-level-label">Entry</div><div class="signal-level-value">${fmt(s.suggested_entry)}</div></div>`;
+                    }
+                    if (s.suggested_stop_loss) {
+                        card += `<div class="signal-level-item"><div class="signal-level-label">Stop Loss</div><div class="signal-level-value red">${fmt(s.suggested_stop_loss)}</div></div>`;
+                    }
+                    if (s.suggested_take_profit) {
+                        card += `<div class="signal-level-item"><div class="signal-level-label">Take Profit</div><div class="signal-level-value green">${fmt(s.suggested_take_profit)}</div></div>`;
+                    }
+                    card += `</div>`;
+                }
+            } else {
+                // Legacy display
+                const indicators = s.indicators || {};
+                const rsiVal = s.rsi || indicators.rsi;
+                const macdVal = s.macd || indicators.macd;
+                if (rsiVal || macdVal) {
+                    card += `<div class="signal-indicators">`;
+                    if (rsiVal) card += `<span>RSI: ${parseFloat(rsiVal).toFixed(1)}</span>`;
+                    if (macdVal) card += `<span>MACD: ${parseFloat(macdVal).toFixed(4)}</span>`;
+                    card += `</div>`;
+                }
+            }
+
+            card += `</div>`;
+            return card;
         }).join('');
         container.innerHTML = html || '<div class="empty-state">Waiting for signals...</div>';
         document.getElementById('signalTime').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    }
+
+    function showSignalError(errorMsg) {
+        const container = document.getElementById('signalsList');
+        container.innerHTML = `<div class="signal-error">${escapeHtml(errorMsg)}</div>`;
+        document.getElementById('signalTime').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     // Position detail modal
@@ -848,7 +1003,13 @@
         ws.onmessage = (event) => {
             const msg = JSON.parse(event.data);
             if (msg.type === 'ticker') updateTickers(msg.data);
-            if (msg.type === 'signals') updateSignals(msg.data);
+            if (msg.type === 'signals') {
+                if (msg.error) {
+                    showSignalError(msg.error);
+                } else if (msg.data) {
+                    updateSignals(msg.data);
+                }
+            }
         };
 
         ws.onclose = () => {
