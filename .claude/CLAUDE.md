@@ -3,7 +3,7 @@
 ## Architecture
 - **Backend:** Node.js (Express) with SQLite (better-sqlite3)
 - **Frontend:** Single-page HTML dashboard (`public/dashboard.html`)
-- **Signal Engine:** LLM-powered (MiniMax M2.5 via MiniMax API) with technical indicators
+- **Signal Engine:** LLM-powered (MiniMax M2.5 via OpenRouter) with technical indicators
 - **Exchange:** Kraken (public API for data, private API for live trading)
 - **Deployment:** Render (see `render.yaml`)
 - **Render Dashboard:** https://dashboard.render.com/web/srv-d64vb3e3jp1c73c4c7jg/env
@@ -68,7 +68,7 @@ Each signal card shows:
 
 ### LLM Model History
 - **Kimi K2.5 (retired):** Required `temperature: 1` (lower caused API errors). Had strong SHORT/bearish bias — ignored text instructions to evaluate both directions. Required forced numerical scoring + code-level override to produce balanced signals. Thinking mode needed 90s timeout.
-- **MiniMax M2.5 (current):** Stronger instruction-following, OpenAI-compatible API. Temperature set to 0.7. ~50-60% cheaper than Kimi K2.5. Expected to follow the dual-scoring prompt more reliably.
+- **MiniMax M2.5 via OpenRouter (current):** Stronger instruction-following, OpenAI-compatible API. Temperature set to 0.7. Served by SiliconFlow through OpenRouter ($0.20/M input, $1.00/M output). M2.5 not yet on MiniMax direct pay-as-you-go. Expected to follow the dual-scoring prompt more reliably.
 
 ### Why the Algorithm Was Stuck on SHORT (Root Cause Analysis)
 1. **Original prompt said "Only trade in trend direction"** — if EMAs were bearish (EMA20 < EMA50 < EMA200), the LLM always output SHORT regardless of other factors
@@ -88,9 +88,11 @@ When working with weaker LLMs, **don't rely on text instructions to change behav
 **Fix:** Switched LLM to MiniMax M2.5:
 - Stronger instruction-following, expected to produce more balanced long/short signals
 - ~50-60% cheaper ($0.30/M input, $1.20/M output vs $0.60/$3.00)
-- OpenAI-compatible API, same chat/completions format
+- Routed through OpenRouter (SiliconFlow provider) — $0.20/M input, $1.00/M output
+- M2.5 not yet on MiniMax direct pay-as-you-go, OpenRouter is the only option
 - Temperature changed from 1.0 (Kimi requirement) to 0.7
 - Env vars generalized: `KIMI_API_KEY` → `LLM_API_KEY` (backwards-compatible, old vars still work)
+- Model ID: `minimax/minimax-m2.5` (OpenRouter format)
 - Structural override kept as safety net
 
 ### 2026-02-15 (v2): Forced Dual-Direction Scoring

@@ -1,8 +1,8 @@
 const { logError } = require('./logger');
 const { getLearningContext } = require('./agentLearning');
 
-const LLM_API_URL = process.env.LLM_API_URL || process.env.KIMI_API_URL || 'https://api.minimax.io/v1/chat/completions';
-const LLM_MODEL_ID = process.env.LLM_MODEL_ID || process.env.KIMI_MODEL_ID || 'MiniMax-M2.5';
+const LLM_API_URL = process.env.LLM_API_URL || process.env.KIMI_API_URL || 'https://openrouter.ai/api/v1/chat/completions';
+const LLM_MODEL_ID = process.env.LLM_MODEL_ID || process.env.KIMI_MODEL_ID || 'minimax/minimax-m2.5';
 const LLM_TIMEOUT = parseInt(process.env.LLM_TIMEOUT) || 60000;
 const LLM_API_KEY = process.env.LLM_API_KEY || process.env.KIMI_API_KEY;
 
