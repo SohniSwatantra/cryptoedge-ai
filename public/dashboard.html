@@ -970,6 +970,10 @@
                     card += `<span class="risk-badge risk-${s.risk_level}">Risk: ${s.risk_level}</span>`;
                 }
                 card += `<span class="ai-badge">AI Analysis</span>`;
+                if (s.long_score != null && s.short_score != null) {
+                    card += `<span class="ai-badge" style="background:rgba(62,207,142,0.15);color:var(--accent-green);">L:${s.long_score}</span>`;
+                    card += `<span class="ai-badge" style="background:rgba(248,113,113,0.15);color:var(--accent-red);">S:${s.short_score}</span>`;
+                }
                 card += `</div>`;
 
                 // Analysis text

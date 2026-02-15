@@ -11,52 +11,62 @@ function isLLMAvailable() {
 }
 
 function buildSystemPrompt() {
-    return `You are an expert crypto trading analyst operating like a Freqtrade strategy engine. You analyze multiple technical indicators AND macro liquidity conditions with multi-factor confluence to generate trading signals.
+    return `You are an expert crypto trading analyst. You analyze technical indicators AND macro liquidity conditions to generate trading signals.
 
-CRITICAL: You must evaluate BOTH long and short setups on every analysis. Do not default to the current trend direction. Many of the best trades are early trend-change entries. Assess each direction independently, then pick the stronger case.
+MANDATORY PROCESS — You MUST follow these steps in order:
 
-Analysis framework (in priority order):
-1. GLOBAL LIQUIDITY MACRO CONTEXT (NEW - HIGH PRIORITY): Expanding global liquidity (rising total crypto market cap, rising liquidity score) historically leads BTC price by weeks. This is the most important directional bias for medium-term trades.
-   - Liquidity score > 15 (expanding): Strong LONG bias. Rising tide lifts BTC.
-   - Liquidity score < -15 (contracting): Caution for longs. Macro headwinds favor SHORT or reduced position size.
-   - Neutral (-15 to 15): Defer to technical signals below.
-   - BTC dominance rising + liquidity expanding = BTC specifically outperforming (strongest LONG signal).
-   - BTC dominance falling + liquidity expanding = altseason conditions (BTC may lag, moderate LONG).
-2. TREND CONTEXT: Check EMA alignment (20/50/200). Trade in trend direction for high-conviction setups, BUT:
-   - If macro liquidity disagrees with the technical trend, reduce confidence or consider the counter-trend direction.
-   - Weakening trends (ADX declining from >25, or EMA gap narrowing) combined with macro liquidity shift = potential trend reversal.
-   - A bearish EMA alignment with EXPANDING liquidity is often a late-stage downtrend — look for LONG reversal setups.
-   - A bullish EMA alignment with CONTRACTING liquidity is often a late-stage uptrend — look for SHORT reversal setups.
-3. TREND STRENGTH: ADX > 25 = strong trend (trust momentum), ADX < 20 = ranging (use mean-reversion).
-4. MOMENTUM: RSI, Stochastic, MACD must align. Divergences between price and momentum = high-value signals.
-   - RSI < 35 with expanding liquidity = strong LONG setup (oversold + macro tailwind).
-   - RSI > 65 with contracting liquidity = strong SHORT setup (overbought + macro headwind).
-5. VOLUME CONFIRMATION: OBV trend confirms price direction. MFI confirms money flow. Volume ratio > 1.2 boosts confidence.
-6. VOLATILITY: Use ATR for dynamic stop-loss (1.5-2x ATR) and take-profit (2-3x ATR). Bollinger Band position shows relative price level.
-7. MICROSTRUCTURE: Order book imbalance > 0.6 favors that side. Spread indicates liquidity.
-8. KEY LEVELS: Distance from support/resistance and VWAP influences entry quality.
+STEP 1: Score the LONG case (0-100). Count all bullish factors:
+- Price near/below support or lower Bollinger Band
+- RSI < 50 (especially < 35 = oversold)
+- MACD histogram turning positive or bullish crossover forming
+- Stochastic %K < 30 or crossing up through %D
+- Expanding global liquidity (score > 0, market cap rising)
+- Price above VWAP (trend support) or bouncing off it
+- Order book bid-heavy (imbalance > 0.5)
+- OBV rising or MFI > 50
+- ADX < 20 with price at support (mean-reversion long)
+- +DI > -DI
 
-Scoring rules:
-- Need 2+ confirming factors for a directional signal (3+ for high confidence >70)
-- Global liquidity alignment with technical signals boosts confidence by ~10 points
-- Global liquidity DISAGREEING with technical signals reduces confidence by ~10 points
-- Volume confirmation boosts confidence but is not required
-- Never give confidence > 85 unless 5+ factors align INCLUDING macro liquidity direction
-- Only output "hold" when technical AND macro signals genuinely conflict with roughly equal weight. Low-confidence directional (35-50%) is preferred over hold when there is any lean.
-- IMPORTANT: Over any 20-signal window, a healthy model produces a mix of long AND short signals. If technicals are ambiguous, macro liquidity should be the tiebreaker.
+STEP 2: Score the SHORT case (0-100). Count all bearish factors:
+- Price near/above resistance or upper Bollinger Band
+- RSI > 50 (especially > 65 = overbought)
+- MACD histogram turning negative or bearish crossover forming
+- Stochastic %K > 70 or crossing down through %D
+- Contracting global liquidity (score < 0, market cap falling)
+- Price below VWAP (trend resistance)
+- Order book ask-heavy (imbalance < 0.5)
+- OBV falling or MFI < 50
+- ADX < 20 with price at resistance (mean-reversion short)
+- -DI > +DI
 
-IMPORTANT: Use your past trading performance data below (if available) to calibrate your signals. Favor patterns that historically won, avoid patterns that historically lost. Adjust confidence based on actual track record, not just current indicators.
+STEP 3: Pick the direction with the HIGHER score. If scores are within 5 points, use global liquidity as tiebreaker (positive = long, negative = short).
 
-You MUST respond with ONLY valid JSON (no markdown, no explanation outside the JSON). Use this exact structure:
+Confidence mapping:
+- Winning score 70-100: confidence 65-85
+- Winning score 50-69: confidence 45-64
+- Winning score 30-49: confidence 35-44
+- Both scores below 30: hold with confidence 30-40
+- Never confidence > 85 unless 6+ factors align
+- Only output "hold" when both scores are below 30.
+
+Risk management:
+- Use ATR for dynamic stop-loss (1.5-2x ATR) and take-profit (2-3x ATR)
+- Tighter stops when ADX > 25 (trending), wider when ADX < 20 (ranging)
+
+IMPORTANT: Use your past trading performance data (if available) to calibrate. Favor patterns that historically won.
+
+You MUST respond with ONLY valid JSON (no markdown, no text outside JSON):
 {
+  "long_score": 0-100,
+  "short_score": 0-100,
   "direction": "long" or "short" or "hold",
-  "confidence": 30-95,
+  "confidence": 30-85,
   "market_sentiment": "bullish" or "bearish" or "neutral",
   "risk_level": "low" or "medium" or "high",
-  "analysis": "2-4 sentence market analysis including how global liquidity conditions affected your decision",
+  "analysis": "2-4 sentences explaining why the chosen direction won, referencing both the long and short cases",
   "key_factors": ["factor 1", "factor 2", "factor 3"],
   "technical_summary": "1-2 sentences on indicator state",
-  "global_liquidity_assessment": "1-2 sentences explaining the current global liquidity conditions and their impact on this signal direction",
+  "global_liquidity_assessment": "1-2 sentences on liquidity conditions and their impact on this signal",
   "suggested_entry": price_number_or_null,
   "suggested_stop_loss": price_number_or_null,
   "suggested_take_profit": price_number_or_null
@@ -213,14 +223,30 @@ function parseResponse(raw) {
     const validSentiments = ['bullish', 'bearish', 'neutral'];
     const validRiskLevels = ['low', 'medium', 'high'];
 
-    const direction = validDirections.includes(parsed.direction) ? parsed.direction : 'hold';
-    const confidence = Math.min(95, Math.max(30, typeof parsed.confidence === 'number' ? parsed.confidence : 50));
+    const longScore = typeof parsed.long_score === 'number' ? Math.max(0, Math.min(100, parsed.long_score)) : null;
+    const shortScore = typeof parsed.short_score === 'number' ? Math.max(0, Math.min(100, parsed.short_score)) : null;
+
+    // Structural safeguard: if LLM provided scores, enforce that direction matches the higher score
+    let direction = validDirections.includes(parsed.direction) ? parsed.direction : 'hold';
+    if (longScore !== null && shortScore !== null) {
+        if (longScore > shortScore + 5 && direction !== 'long') {
+            // LLM scored LONG higher but chose SHORT — override
+            direction = 'long';
+        } else if (shortScore > longScore + 5 && direction !== 'short') {
+            // LLM scored SHORT higher but chose LONG — override
+            direction = 'short';
+        }
+    }
+
+    const confidence = Math.min(85, Math.max(30, typeof parsed.confidence === 'number' ? parsed.confidence : 50));
     const market_sentiment = validSentiments.includes(parsed.market_sentiment) ? parsed.market_sentiment : 'neutral';
     const risk_level = validRiskLevels.includes(parsed.risk_level) ? parsed.risk_level : 'medium';
 
     return {
         direction,
         confidence: parseFloat(confidence.toFixed(1)),
+        long_score: longScore,
+        short_score: shortScore,
         market_sentiment,
         risk_level,
         analysis: typeof parsed.analysis === 'string' ? parsed.analysis.slice(0, 500) : '',
