@@ -98,6 +98,7 @@ function migrateDB(db) {
         'ALTER TABLE signals ADD COLUMN model_version TEXT',
         "ALTER TABLE signals ADD COLUMN analysis_source TEXT DEFAULT 'legacy'",
         'ALTER TABLE signals ADD COLUMN token_usage INTEGER',
+        'ALTER TABLE signals ADD COLUMN global_liquidity_assessment TEXT',
     ];
 
     for (const sql of migrations) {

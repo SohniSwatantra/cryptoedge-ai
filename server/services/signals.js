@@ -1,6 +1,7 @@
 const { getOHLCV, getTicker, getOrderBook } = require('./kraken');
 const { computeAllIndicators } = require('./indicators');
 const { analyzeMarket, isLLMAvailable } = require('./llmAnalysis');
+const { fetchGlobalLiquidity } = require('./globalLiquidity');
 const { logError } = require('./logger');
 const { getDB } = require('../db/init');
 
@@ -9,11 +10,15 @@ const PAIRS = ['BTC/EUR', 'ETH/EUR'];
 let isRunning = false; // Dedup guard
 
 async function generateSignal(pair) {
-    // Fetch all market data in parallel
-    const [candles, tickerData, orderBook] = await Promise.all([
+    // Fetch all market data in parallel (including global liquidity)
+    const [candles, tickerData, orderBook, globalLiquidity] = await Promise.all([
         getOHLCV(pair, 60),
         getTicker([pair]).then(t => t[pair]),
         getOrderBook(pair, 10),
+        fetchGlobalLiquidity().catch(err => {
+            logError('SIGNAL_WARN', `Global liquidity fetch failed: ${err.message}`);
+            return null;
+        }),
     ]);
 
     if (candles.length < 30) {
@@ -23,8 +28,8 @@ async function generateSignal(pair) {
     // Compute all indicators
     const indicators = computeAllIndicators(candles);
 
-    // Build market data package for LLM
-    const marketData = { ticker: tickerData, indicators, orderBook };
+    // Build market data package for LLM (now includes global liquidity)
+    const marketData = { ticker: tickerData, indicators, orderBook, globalLiquidity };
 
     // Call LLM
     const analysis = await analyzeMarket(pair, marketData);
@@ -37,8 +42,9 @@ async function generateSignal(pair) {
             rsi, macd, macd_signal, bb_upper, bb_lower,
             analysis_text, market_sentiment, key_factors, risk_level,
             suggested_entry, suggested_stop_loss, suggested_take_profit,
-            model_version, analysis_source, token_usage
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            model_version, analysis_source, token_usage,
+            global_liquidity_assessment
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
         pair,
         analysis.direction,
@@ -58,7 +64,8 @@ async function generateSignal(pair) {
         analysis.suggested_take_profit,
         analysis.model_version,
         'llm',
-        analysis.token_usage
+        analysis.token_usage,
+        analysis.global_liquidity_assessment || null
     );
 
     return {
@@ -84,6 +91,7 @@ async function generateSignal(pair) {
         model_version: analysis.model_version,
         analysis_source: 'llm',
         technical_summary: analysis.technical_summary,
+        global_liquidity_assessment: analysis.global_liquidity_assessment || null,
     };
 }
 

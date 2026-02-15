@@ -11,22 +11,39 @@ function isLLMAvailable() {
 }
 
 function buildSystemPrompt() {
-    return `You are an expert crypto trading analyst operating like a Freqtrade strategy engine. You analyze multiple technical indicators with multi-factor confluence to generate trading signals.
+    return `You are an expert crypto trading analyst operating like a Freqtrade strategy engine. You analyze multiple technical indicators AND macro liquidity conditions with multi-factor confluence to generate trading signals.
+
+CRITICAL: You must evaluate BOTH long and short setups on every analysis. Do not default to the current trend direction. Many of the best trades are early trend-change entries. Assess each direction independently, then pick the stronger case.
 
 Analysis framework (in priority order):
-1. TREND CONTEXT: Check EMA alignment (20/50/200). Only trade in trend direction unless strong reversal signals.
-2. TREND STRENGTH: ADX > 25 = strong trend (trust momentum), ADX < 20 = ranging (use mean-reversion).
-3. MOMENTUM: RSI, Stochastic, MACD must align. Divergences between price and momentum = high-value signals.
-4. VOLUME CONFIRMATION: Require volume ratio > 1.2 for entries. OBV trend must confirm price direction. MFI confirms money flow.
-5. VOLATILITY: Use ATR for dynamic stop-loss (1.5-2x ATR) and take-profit (2-3x ATR). Bollinger Band position shows relative price level.
-6. MICROSTRUCTURE: Order book imbalance > 0.6 favors that side. Spread indicates liquidity.
-7. KEY LEVELS: Distance from support/resistance and VWAP influences entry quality.
+1. GLOBAL LIQUIDITY MACRO CONTEXT (NEW - HIGH PRIORITY): Expanding global liquidity (rising total crypto market cap, rising liquidity score) historically leads BTC price by weeks. This is the most important directional bias for medium-term trades.
+   - Liquidity score > 15 (expanding): Strong LONG bias. Rising tide lifts BTC.
+   - Liquidity score < -15 (contracting): Caution for longs. Macro headwinds favor SHORT or reduced position size.
+   - Neutral (-15 to 15): Defer to technical signals below.
+   - BTC dominance rising + liquidity expanding = BTC specifically outperforming (strongest LONG signal).
+   - BTC dominance falling + liquidity expanding = altseason conditions (BTC may lag, moderate LONG).
+2. TREND CONTEXT: Check EMA alignment (20/50/200). Trade in trend direction for high-conviction setups, BUT:
+   - If macro liquidity disagrees with the technical trend, reduce confidence or consider the counter-trend direction.
+   - Weakening trends (ADX declining from >25, or EMA gap narrowing) combined with macro liquidity shift = potential trend reversal.
+   - A bearish EMA alignment with EXPANDING liquidity is often a late-stage downtrend — look for LONG reversal setups.
+   - A bullish EMA alignment with CONTRACTING liquidity is often a late-stage uptrend — look for SHORT reversal setups.
+3. TREND STRENGTH: ADX > 25 = strong trend (trust momentum), ADX < 20 = ranging (use mean-reversion).
+4. MOMENTUM: RSI, Stochastic, MACD must align. Divergences between price and momentum = high-value signals.
+   - RSI < 35 with expanding liquidity = strong LONG setup (oversold + macro tailwind).
+   - RSI > 65 with contracting liquidity = strong SHORT setup (overbought + macro headwind).
+5. VOLUME CONFIRMATION: OBV trend confirms price direction. MFI confirms money flow. Volume ratio > 1.2 boosts confidence.
+6. VOLATILITY: Use ATR for dynamic stop-loss (1.5-2x ATR) and take-profit (2-3x ATR). Bollinger Band position shows relative price level.
+7. MICROSTRUCTURE: Order book imbalance > 0.6 favors that side. Spread indicates liquidity.
+8. KEY LEVELS: Distance from support/resistance and VWAP influences entry quality.
 
 Scoring rules:
 - Need 2+ confirming factors for a directional signal (3+ for high confidence >70)
-- Volume confirmation (volume ratio > 1.0) boosts confidence but is not required
-- Never give confidence > 85 unless 5+ factors align
-- Only hold if indicators across ALL categories genuinely conflict. Low-confidence directional (35-50%) is preferred over hold when there is any lean.
+- Global liquidity alignment with technical signals boosts confidence by ~10 points
+- Global liquidity DISAGREEING with technical signals reduces confidence by ~10 points
+- Volume confirmation boosts confidence but is not required
+- Never give confidence > 85 unless 5+ factors align INCLUDING macro liquidity direction
+- Only output "hold" when technical AND macro signals genuinely conflict with roughly equal weight. Low-confidence directional (35-50%) is preferred over hold when there is any lean.
+- IMPORTANT: Over any 20-signal window, a healthy model produces a mix of long AND short signals. If technicals are ambiguous, macro liquidity should be the tiebreaker.
 
 IMPORTANT: Use your past trading performance data below (if available) to calibrate your signals. Favor patterns that historically won, avoid patterns that historically lost. Adjust confidence based on actual track record, not just current indicators.
 
@@ -36,9 +53,10 @@ You MUST respond with ONLY valid JSON (no markdown, no explanation outside the J
   "confidence": 30-95,
   "market_sentiment": "bullish" or "bearish" or "neutral",
   "risk_level": "low" or "medium" or "high",
-  "analysis": "2-4 sentence market analysis",
+  "analysis": "2-4 sentence market analysis including how global liquidity conditions affected your decision",
   "key_factors": ["factor 1", "factor 2", "factor 3"],
   "technical_summary": "1-2 sentences on indicator state",
+  "global_liquidity_assessment": "1-2 sentences explaining the current global liquidity conditions and their impact on this signal direction",
   "suggested_entry": price_number_or_null,
   "suggested_stop_loss": price_number_or_null,
   "suggested_take_profit": price_number_or_null
@@ -46,12 +64,27 @@ You MUST respond with ONLY valid JSON (no markdown, no explanation outside the J
 }
 
 function buildUserPrompt(pair, marketData) {
-    const { ticker, indicators, orderBook } = marketData;
+    const { ticker, indicators, orderBook, globalLiquidity } = marketData;
     const ind = indicators;
 
     const sections = [];
 
     sections.push(`=== ${pair} Market Analysis Request ===`);
+
+    // Global Liquidity data (first — highest priority context)
+    if (globalLiquidity) {
+        const gl = globalLiquidity;
+        sections.push(`GLOBAL LIQUIDITY (MACRO CONTEXT — ASSESS FIRST):
+  Total Crypto Market Cap: $${(gl.total_market_cap_usd / 1e12).toFixed(3)}T
+  Market Cap 24h Change: ${gl.market_cap_change_24h_pct >= 0 ? '+' : ''}${gl.market_cap_change_24h_pct.toFixed(2)}%
+  24h Total Volume: $${(gl.total_volume_24h_usd / 1e9).toFixed(1)}B
+  BTC Dominance: ${gl.btc_dominance.toFixed(1)}%
+  Liquidity Score: ${gl.liquidity_score} (range: -100 to +100)
+  Liquidity Trend: ${gl.liquidity_trend.toUpperCase()}
+  NOTE: Expanding liquidity = bullish macro tailwind for BTC. Contracting = bearish headwind.`);
+    } else {
+        sections.push(`GLOBAL LIQUIDITY: Data unavailable — rely on technical signals only.`);
+    }
 
     // Ticker data
     if (ticker) {
@@ -148,11 +181,11 @@ function buildMessages(pair, marketData) {
     if (learning && learning.length > 50) {
         messages.push({
             role: 'user',
-            content: `=== YOUR PAST TRADING PERFORMANCE ===\n${learning}\n\nUse this track record to calibrate your signal. Now analyze the current market data below.`,
+            content: `=== YOUR PAST TRADING PERFORMANCE ===\n${learning}\n\nUse this track record to calibrate your signal. Analyze BOTH long and short setups. Now analyze the current market data below.`,
         });
         messages.push({
             role: 'assistant',
-            content: 'Understood. I will factor in my past performance data when generating this signal.',
+            content: 'Understood. I will factor in my past performance data and evaluate both long and short setups before deciding.',
         });
     }
 
@@ -193,6 +226,7 @@ function parseResponse(raw) {
         analysis: typeof parsed.analysis === 'string' ? parsed.analysis.slice(0, 500) : '',
         key_factors: Array.isArray(parsed.key_factors) ? parsed.key_factors.slice(0, 5).map(f => String(f).slice(0, 100)) : [],
         technical_summary: typeof parsed.technical_summary === 'string' ? parsed.technical_summary.slice(0, 300) : '',
+        global_liquidity_assessment: typeof parsed.global_liquidity_assessment === 'string' ? parsed.global_liquidity_assessment.slice(0, 400) : '',
         suggested_entry: typeof parsed.suggested_entry === 'number' ? parsed.suggested_entry : null,
         suggested_stop_loss: typeof parsed.suggested_stop_loss === 'number' ? parsed.suggested_stop_loss : null,
         suggested_take_profit: typeof parsed.suggested_take_profit === 'number' ? parsed.suggested_take_profit : null,
