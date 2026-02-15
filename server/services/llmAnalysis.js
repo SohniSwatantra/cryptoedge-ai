@@ -1,13 +1,14 @@
 const { logError } = require('./logger');
 const { getLearningContext } = require('./agentLearning');
 
-const KIMI_API_URL = process.env.KIMI_API_URL || 'https://api.moonshot.ai/v1/chat/completions';
-const KIMI_MODEL_ID = process.env.KIMI_MODEL_ID || 'kimi-k2.5';
-const LLM_TIMEOUT = parseInt(process.env.LLM_TIMEOUT) || 60000; // 60 seconds (K2.5 thinking mode needs time)
+const LLM_API_URL = process.env.LLM_API_URL || process.env.KIMI_API_URL || 'https://api.minimax.io/v1/chat/completions';
+const LLM_MODEL_ID = process.env.LLM_MODEL_ID || process.env.KIMI_MODEL_ID || 'MiniMax-M2.5';
+const LLM_TIMEOUT = parseInt(process.env.LLM_TIMEOUT) || 60000;
+const LLM_API_KEY = process.env.LLM_API_KEY || process.env.KIMI_API_KEY;
 
 function isLLMAvailable() {
     if (process.env.LLM_SIGNAL_ENABLED === 'false') return false;
-    return !!process.env.KIMI_API_KEY;
+    return !!LLM_API_KEY;
 }
 
 function buildSystemPrompt() {
@@ -268,16 +269,16 @@ async function analyzeMarket(pair, marketData) {
     const timeout = setTimeout(() => controller.abort(), LLM_TIMEOUT);
 
     try {
-        const response = await fetch(KIMI_API_URL, {
+        const response = await fetch(LLM_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.KIMI_API_KEY}`,
+                'Authorization': `Bearer ${LLM_API_KEY}`,
             },
             body: JSON.stringify({
-                model: KIMI_MODEL_ID,
+                model: LLM_MODEL_ID,
                 messages: buildMessages(pair, marketData),
-                temperature: 1,
+                temperature: 0.7,
                 max_tokens: 4096,
             }),
             signal: controller.signal,
@@ -285,7 +286,7 @@ async function analyzeMarket(pair, marketData) {
 
         if (!response.ok) {
             const errorBody = await response.text().catch(() => '');
-            logError('LLM_API', `${response.status} from ${KIMI_API_URL} model=${KIMI_MODEL_ID}: ${errorBody.slice(0, 300)}`);
+            logError('LLM_API', `${response.status} from ${LLM_API_URL} model=${LLM_MODEL_ID}: ${errorBody.slice(0, 300)}`);
             throw new Error(`API ${response.status}: ${errorBody.slice(0, 200)}`);
         }
 
@@ -298,7 +299,7 @@ async function analyzeMarket(pair, marketData) {
         }
 
         const result = parseResponse(content);
-        result.model_version = KIMI_MODEL_ID;
+        result.model_version = LLM_MODEL_ID;
         result.token_usage = data.usage?.total_tokens || null;
 
         return result;

@@ -3,7 +3,7 @@
 ## Architecture
 - **Backend:** Node.js (Express) with SQLite (better-sqlite3)
 - **Frontend:** Single-page HTML dashboard (`public/dashboard.html`)
-- **Signal Engine:** LLM-powered (Kimi K2.5 via Moonshot API) with technical indicators
+- **Signal Engine:** LLM-powered (MiniMax M2.5 via MiniMax API) with technical indicators
 - **Exchange:** Kraken (public API for data, private API for live trading)
 - **Deployment:** Render (see `render.yaml`)
 - **Render Dashboard:** https://dashboard.render.com/web/srv-d64vb3e3jp1c73c4c7jg/env
@@ -24,7 +24,7 @@
 2. Fetch Global Liquidity data from CoinGecko (parallel)
 3. Compute 15+ technical indicators (RSI, MACD, BB, EMA, ADX, Stochastic, ATR, OBV, MFI, VWAP, S/R)
 4. Load agent learning context (past trade performance)
-5. Send all data to Kimi K2.5 LLM with structured prompt
+5. Send all data to MiniMax M2.5 LLM with structured prompt
 6. LLM scores both LONG case (0-100) and SHORT case (0-100)
 7. Parse JSON response → structural override if scores contradict direction → store in SQLite → broadcast via WebSocket
 
@@ -66,21 +66,32 @@ Each signal card shows:
 
 ## Lessons Learned / Debugging Notes
 
-### Kimi K2.5 Behavioral Quirks
-- **Requires `temperature: 1`** — lower values cause API errors (commit `458dfe5`)
-- **Has a strong SHORT/bearish bias** — when told "evaluate both directions" in plain text, it ignores the instruction and defaults to whichever direction the EMAs suggest. The only reliable fix was forcing it to output numerical scores for both sides in the JSON schema, plus a code-level override.
-- **Thinking mode needs time** — LLM_TIMEOUT is set to 90s on Render because K2.5's thinking mode can be slow
+### LLM Model History
+- **Kimi K2.5 (retired):** Required `temperature: 1` (lower caused API errors). Had strong SHORT/bearish bias — ignored text instructions to evaluate both directions. Required forced numerical scoring + code-level override to produce balanced signals. Thinking mode needed 90s timeout.
+- **MiniMax M2.5 (current):** Stronger instruction-following, OpenAI-compatible API. Temperature set to 0.7. ~50-60% cheaper than Kimi K2.5. Expected to follow the dual-scoring prompt more reliably.
 
 ### Why the Algorithm Was Stuck on SHORT (Root Cause Analysis)
 1. **Original prompt said "Only trade in trend direction"** — if EMAs were bearish (EMA20 < EMA50 < EMA200), the LLM always output SHORT regardless of other factors
 2. **No macro context** — the algorithm had zero awareness of capital flows, market cap trends, or liquidity conditions that could override short-term technical bearishness
 3. **First fix attempt (soft prompt change) failed** — adding "CRITICAL: evaluate both" instruction was ignored by Kimi K2.5. The model is not strong enough to override its own analytical bias from a text instruction alone
 4. **Working fix: forced scoring + structural override** — requiring `long_score` and `short_score` as mandatory JSON fields forces the model to actually enumerate factors for both sides. The `parseResponse()` override catches any remaining contradictions. This is a proven LLM debiasing technique.
+5. **Model upgrade to MiniMax M2.5** — stronger instruction-following should produce more balanced signals without needing the structural override as a crutch (override kept as safety net)
 
 ### Key Insight for Future Development
-When working with weaker LLMs (Kimi K2.5), **don't rely on text instructions to change behavior**. Instead, change the **output schema** to force the desired reasoning process, and add **code-level validation** to enforce consistency. The JSON schema IS the control mechanism.
+When working with weaker LLMs, **don't rely on text instructions to change behavior**. Instead, change the **output schema** to force the desired reasoning process, and add **code-level validation** to enforce consistency. The JSON schema IS the control mechanism. Upgrading the model is the cleanest long-term fix.
 
 ## Change Log
+
+### 2026-02-16 (v3): Switch from Kimi K2.5 to MiniMax M2.5
+**Problem:** Kimi K2.5 still produced 89% SHORT signals despite forced dual-scoring — weak instruction-following.
+
+**Fix:** Switched LLM to MiniMax M2.5:
+- Stronger instruction-following, expected to produce more balanced long/short signals
+- ~50-60% cheaper ($0.30/M input, $1.20/M output vs $0.60/$3.00)
+- OpenAI-compatible API, same chat/completions format
+- Temperature changed from 1.0 (Kimi requirement) to 0.7
+- Env vars generalized: `KIMI_API_KEY` → `LLM_API_KEY` (backwards-compatible, old vars still work)
+- Structural override kept as safety net
 
 ### 2026-02-15 (v2): Forced Dual-Direction Scoring
 **Problem:** First prompt fix ("evaluate both") was ignored by Kimi K2.5 — still only SHORT.
