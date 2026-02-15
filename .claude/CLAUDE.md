@@ -25,10 +25,13 @@
 3. Compute 15+ technical indicators (RSI, MACD, BB, EMA, ADX, Stochastic, ATR, OBV, MFI, VWAP, S/R)
 4. Load agent learning context (past trade performance)
 5. Send all data to MiniMax M2.5 LLM with structured prompt
-6. LLM scores both LONG case (0-100) and SHORT case (0-100)
-7. Parse JSON response → structural override if scores contradict direction → store in SQLite → broadcast via WebSocket
+6. LLM scores LONG case (0-100) and BEARISH RISK (0-100)
+7. Parse JSON response → enforce long-only logic (long_score >= 45 && > bearish_risk + 5 = LONG, else HOLD) → store in SQLite → broadcast via WebSocket
 
-## Current Algorithm State (as of 2026-02-15)
+## Current Algorithm State (as of 2026-02-16)
+
+### Long-Only Mode
+The system only outputs **LONG** (enter trade) or **HOLD** (wait). SHORT signals are never produced — the user can only go long on crypto, so bearish analysis is used to decide when to *wait* rather than generating unusable short signals.
 
 ### How Signals Are Decided
 The LLM receives all market data and follows a **mandatory 3-step process**:
@@ -36,13 +39,17 @@ The LLM receives all market data and follows a **mandatory 3-step process**:
 **Step 1 — Score the LONG case (0-100):** Count bullish factors from a checklist:
 - Price near support / lower BB, RSI < 50 (especially < 35), MACD turning positive, Stochastic %K < 30 or crossing up, expanding global liquidity, price at/above VWAP, bid-heavy order book, OBV rising, MFI > 50, +DI > -DI
 
-**Step 2 — Score the SHORT case (0-100):** Count bearish factors:
+**Step 2 — Score the BEARISH RISK (0-100):** How dangerous is it to go long right now?
 - Price near resistance / upper BB, RSI > 50 (especially > 65), MACD turning negative, Stochastic %K > 70 or crossing down, contracting global liquidity, price below VWAP, ask-heavy order book, OBV falling, MFI < 50, -DI > +DI
 
-**Step 3 — Pick the higher score.** If within 5 points, Global Liquidity is the tiebreaker (positive = long, negative = short). Both below 30 = hold.
+**Step 3 — Decide LONG or HOLD:**
+- `long_score >= 45 AND long_score > bearish_risk_score + 5` → **LONG**
+- Everything else → **HOLD** (wait for a better entry)
 
 ### Structural Safeguard (in `parseResponse()`)
-If the LLM outputs scores that contradict its chosen direction (e.g. `long_score: 65, short_score: 40` but says `"direction": "short"`), the code **overrides** the direction to match the higher score. This prevents the LLM from being lazy or biased. This is NOT hardcoded — the scores are dynamically calculated from live data every cycle.
+- If LLM outputs `"short"` → automatically mapped to `"hold"`
+- Scores enforce direction: `long_score >= 45 && long_score > bearishRisk + 5` = long, else hold
+- HOLD signals have entry/stop-loss/take-profit set to null (no trade levels needed)
 
 ### Global Liquidity
 - **Source:** CoinGecko free `/global` API (no key needed)
@@ -56,13 +63,13 @@ If the LLM outputs scores that contradict its chosen direction (e.g. `long_score
 
 ### Dashboard Display
 Each signal card shows:
-- Direction badge (LONG/SHORT/HOLD) with confidence %
+- Direction badge (LONG/HOLD) with confidence %
 - Sentiment + Risk + AI badge
-- **L: and S: score badges** — the raw long/short scores so the reasoning is visible
-- Analysis text (2-4 sentences referencing both cases)
+- **L: and Risk: score badges** — the raw long score and bearish risk score so the reasoning is visible
+- Analysis text (2-4 sentences explaining long viability or why to wait)
 - **Global Liquidity section** (blue accent) — 1-2 sentences on macro conditions
 - Key factor tags
-- Entry / Stop Loss / Take Profit levels
+- Entry / Stop Loss / Take Profit levels (only for LONG signals)
 
 ## Lessons Learned / Debugging Notes
 
@@ -81,6 +88,19 @@ Each signal card shows:
 When working with weaker LLMs, **don't rely on text instructions to change behavior**. Instead, change the **output schema** to force the desired reasoning process, and add **code-level validation** to enforce consistency. The JSON schema IS the control mechanism. Upgrading the model is the cleanest long-term fix.
 
 ## Change Log
+
+### 2026-02-16 (v4): Long-Only Mode — Remove SHORT Signals
+**Problem:** User can only go long (buy crypto). ~89% of signals were SHORT, which is noise — user can't act on them.
+
+**Fix:** Converted to long-only signal system:
+- LLM prompt STEP 2 renamed from "Score the SHORT case" to "Score the BEARISH RISK"
+- STEP 3 rewritten: `long_score >= 45 AND > bearish_risk + 5` → LONG, else → HOLD
+- `short_score` renamed to `bearish_risk_score` throughout (backwards-compatible parsing)
+- `parseResponse()` maps any LLM "short" output to "hold"
+- HOLD signals have entry/stop-loss/take-profit set to null
+- Dashboard: Short trade button removed, `S:` badge renamed to `Risk:`
+- Marketing: "Long & Short Signals" → "Long & Hold Signals"
+- No DB migration needed — old 'short' data preserved, CHECK constraint still valid
 
 ### 2026-02-16 (v3): Switch from Kimi K2.5 to MiniMax M2.5
 **Problem:** Kimi K2.5 still produced 89% SHORT signals despite forced dual-scoring — weak instruction-following.

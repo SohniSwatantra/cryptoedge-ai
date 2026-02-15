@@ -93,7 +93,7 @@ async function generateSignal(pair) {
         technical_summary: analysis.technical_summary,
         global_liquidity_assessment: analysis.global_liquidity_assessment || null,
         long_score: analysis.long_score,
-        short_score: analysis.short_score,
+        bearish_risk_score: analysis.bearish_risk_score,
     };
 }
 

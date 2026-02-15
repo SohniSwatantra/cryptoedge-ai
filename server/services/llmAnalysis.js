@@ -12,7 +12,7 @@ function isLLMAvailable() {
 }
 
 function buildSystemPrompt() {
-    return `You are an expert crypto trading analyst. You analyze technical indicators AND macro liquidity conditions to generate trading signals.
+    return `You are an expert crypto trading analyst. You analyze technical indicators AND macro liquidity conditions to decide whether NOW is a good time to enter a LONG position (buy).
 
 MANDATORY PROCESS — You MUST follow these steps in order:
 
@@ -28,7 +28,7 @@ STEP 1: Score the LONG case (0-100). Count all bullish factors:
 - ADX < 20 with price at support (mean-reversion long)
 - +DI > -DI
 
-STEP 2: Score the SHORT case (0-100). Count all bearish factors:
+STEP 2: Score the BEARISH RISK (0-100). How dangerous is it to go long right now? Count all bearish factors:
 - Price near/above resistance or upper Bollinger Band
 - RSI > 50 (especially > 65 = overbought)
 - MACD histogram turning negative or bearish crossover forming
@@ -37,34 +37,37 @@ STEP 2: Score the SHORT case (0-100). Count all bearish factors:
 - Price below VWAP (trend resistance)
 - Order book ask-heavy (imbalance < 0.5)
 - OBV falling or MFI < 50
-- ADX < 20 with price at resistance (mean-reversion short)
+- ADX < 20 with price at resistance (mean-reversion risk)
 - -DI > +DI
 
-STEP 3: Pick the direction with the HIGHER score. If scores are within 5 points, use global liquidity as tiebreaker (positive = long, negative = short).
+STEP 3: Decide LONG or HOLD:
+- If long_score >= 45 AND long_score > bearish_risk_score + 5 → LONG (enter trade)
+- Everything else → HOLD (wait for a better entry)
+- There is NO "short" direction. We only go long or wait.
 
 Confidence mapping:
-- Winning score 70-100: confidence 65-85
-- Winning score 50-69: confidence 45-64
-- Winning score 30-49: confidence 35-44
-- Both scores below 30: hold with confidence 30-40
+- long_score 70-100 with low bearish risk: confidence 65-85
+- long_score 50-69: confidence 45-64
+- long_score 45-49: confidence 35-44
+- HOLD signals: confidence 30-50 (higher = more confident the wait is justified)
 - Never confidence > 85 unless 6+ factors align
-- Only output "hold" when both scores are below 30.
 
-Risk management:
+Risk management (only for LONG signals):
 - Use ATR for dynamic stop-loss (1.5-2x ATR) and take-profit (2-3x ATR)
 - Tighter stops when ADX > 25 (trending), wider when ADX < 20 (ranging)
+- For HOLD signals, set entry/stop-loss/take-profit to null
 
 IMPORTANT: Use your past trading performance data (if available) to calibrate. Favor patterns that historically won.
 
 You MUST respond with ONLY valid JSON (no markdown, no text outside JSON):
 {
   "long_score": 0-100,
-  "short_score": 0-100,
-  "direction": "long" or "short" or "hold",
+  "bearish_risk_score": 0-100,
+  "direction": "long" or "hold",
   "confidence": 30-85,
   "market_sentiment": "bullish" or "bearish" or "neutral",
   "risk_level": "low" or "medium" or "high",
-  "analysis": "2-4 sentences explaining why the chosen direction won, referencing both the long and short cases",
+  "analysis": "2-4 sentences explaining why LONG is viable or why conditions warrant waiting (HOLD)",
   "key_factors": ["factor 1", "factor 2", "factor 3"],
   "technical_summary": "1-2 sentences on indicator state",
   "global_liquidity_assessment": "1-2 sentences on liquidity conditions and their impact on this signal",
@@ -192,11 +195,11 @@ function buildMessages(pair, marketData) {
     if (learning && learning.length > 50) {
         messages.push({
             role: 'user',
-            content: `=== YOUR PAST TRADING PERFORMANCE ===\n${learning}\n\nUse this track record to calibrate your signal. Analyze BOTH long and short setups. Now analyze the current market data below.`,
+            content: `=== YOUR PAST TRADING PERFORMANCE ===\n${learning}\n\nUse this track record to calibrate your signal. Assess bullish opportunity vs bearish risk. Now analyze the current market data below.`,
         });
         messages.push({
             role: 'assistant',
-            content: 'Understood. I will factor in my past performance data and evaluate both long and short setups before deciding.',
+            content: 'Understood. I will factor in my past performance data and assess the long opportunity against bearish risks before deciding.',
         });
     }
 
@@ -220,22 +223,24 @@ function parseResponse(raw) {
     }
 
     // Validate and sanitize
-    const validDirections = ['long', 'short', 'hold'];
+    const validDirections = ['long', 'hold'];
     const validSentiments = ['bullish', 'bearish', 'neutral'];
     const validRiskLevels = ['low', 'medium', 'high'];
 
     const longScore = typeof parsed.long_score === 'number' ? Math.max(0, Math.min(100, parsed.long_score)) : null;
-    const shortScore = typeof parsed.short_score === 'number' ? Math.max(0, Math.min(100, parsed.short_score)) : null;
+    // Accept bearish_risk_score or fall back to short_score for backwards compat
+    const bearishRisk = typeof parsed.bearish_risk_score === 'number' ? Math.max(0, Math.min(100, parsed.bearish_risk_score))
+        : typeof parsed.short_score === 'number' ? Math.max(0, Math.min(100, parsed.short_score)) : null;
 
-    // Structural safeguard: if LLM provided scores, enforce that direction matches the higher score
-    let direction = validDirections.includes(parsed.direction) ? parsed.direction : 'hold';
-    if (longScore !== null && shortScore !== null) {
-        if (longScore > shortScore + 5 && direction !== 'long') {
-            // LLM scored LONG higher but chose SHORT — override
+    // Map any "short" output to "hold" — we never go short
+    let direction = parsed.direction === 'short' ? 'hold' : (validDirections.includes(parsed.direction) ? parsed.direction : 'hold');
+
+    // Structural safeguard: enforce long-only logic from scores
+    if (longScore !== null && bearishRisk !== null) {
+        if (longScore >= 45 && longScore > bearishRisk + 5) {
             direction = 'long';
-        } else if (shortScore > longScore + 5 && direction !== 'short') {
-            // LLM scored SHORT higher but chose LONG — override
-            direction = 'short';
+        } else {
+            direction = 'hold';
         }
     }
 
@@ -243,20 +248,23 @@ function parseResponse(raw) {
     const market_sentiment = validSentiments.includes(parsed.market_sentiment) ? parsed.market_sentiment : 'neutral';
     const risk_level = validRiskLevels.includes(parsed.risk_level) ? parsed.risk_level : 'medium';
 
+    // For HOLD signals, no trade levels needed
+    const isLong = direction === 'long';
+
     return {
         direction,
         confidence: parseFloat(confidence.toFixed(1)),
         long_score: longScore,
-        short_score: shortScore,
+        bearish_risk_score: bearishRisk,
         market_sentiment,
         risk_level,
         analysis: typeof parsed.analysis === 'string' ? parsed.analysis.slice(0, 500) : '',
         key_factors: Array.isArray(parsed.key_factors) ? parsed.key_factors.slice(0, 5).map(f => String(f).slice(0, 100)) : [],
         technical_summary: typeof parsed.technical_summary === 'string' ? parsed.technical_summary.slice(0, 300) : '',
         global_liquidity_assessment: typeof parsed.global_liquidity_assessment === 'string' ? parsed.global_liquidity_assessment.slice(0, 400) : '',
-        suggested_entry: typeof parsed.suggested_entry === 'number' ? parsed.suggested_entry : null,
-        suggested_stop_loss: typeof parsed.suggested_stop_loss === 'number' ? parsed.suggested_stop_loss : null,
-        suggested_take_profit: typeof parsed.suggested_take_profit === 'number' ? parsed.suggested_take_profit : null,
+        suggested_entry: isLong && typeof parsed.suggested_entry === 'number' ? parsed.suggested_entry : null,
+        suggested_stop_loss: isLong && typeof parsed.suggested_stop_loss === 'number' ? parsed.suggested_stop_loss : null,
+        suggested_take_profit: isLong && typeof parsed.suggested_take_profit === 'number' ? parsed.suggested_take_profit : null,
     };
 }
 
