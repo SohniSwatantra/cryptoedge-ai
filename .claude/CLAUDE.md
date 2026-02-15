@@ -6,6 +6,8 @@
 - **Signal Engine:** LLM-powered (Kimi K2.5 via Moonshot API) with technical indicators
 - **Exchange:** Kraken (public API for data, private API for live trading)
 - **Deployment:** Render (see `render.yaml`)
+- **Render Dashboard:** https://dashboard.render.com/web/srv-d64vb3e3jp1c73c4c7jg/env
+- **Render Service ID:** `srv-d64vb3e3jp1c73c4c7jg`
 
 ## Key Files
 - `server/services/llmAnalysis.js` — LLM system/user prompt, JSON response parsing, direction override logic
